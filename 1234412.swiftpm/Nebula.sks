@@ -1,0 +1,45 @@
+{
+    "particleTexture" : "spark",
+    "particleBirthRate" : 30,
+    "particleLifetime" : 6,
+    "particleLifetimeRange" : 3,
+    "particleSize" : 10,
+    "particleSizeRange" : 6,
+    "particleSpeed" : 20,
+    "particleSpeedRange" : 10,
+    "particleAlpha" : 0.6,
+    "particleAlphaRange" : 0.3,
+    "particleAlphaSpeed" : -0.1,
+    "particleScale" : 1.0,
+    "particleScaleRange" : 0.5,
+    "particleScaleSpeed" : -0.1,
+    "particleRotation" : 0,
+    "particleRotationRange" : 6.28,
+    "particleRotationSpeed" : 1.0,
+    "particleColorBlendFactor" : 1,
+    "particleColorBlendFactorRange" : 0,
+    "particleColorBlendFactorSpeed" : 0,
+    "particleBlendMode" : "add",
+    "particleColor" : "#4169E1",
+    "particleColorSequence" : {
+        "colors" : [
+            "#4169E1",
+            "#9370DB",
+            "#4B0082"
+        ],
+        "locations" : [
+            0.0,
+            0.5,
+            1.0
+        ]
+    },
+    "emitterShape" : "circle",
+    "emitterShapeRadius" : 80,
+    "yAcceleration" : 5,
+    "xAcceleration" : 2,
+    "particleSpin" : 1,
+    "particleSpinRange" : 0.5,
+    "particlePositionRange" : [200, 200],
+    "particleBirthRateRange" : 10,
+    "seed" : 1234
+} 
