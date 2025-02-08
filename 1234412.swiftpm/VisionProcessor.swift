@@ -129,7 +129,7 @@ final class VisionProcessor: NSObject, ObservableObject {
             }
             
             if let startTime = lastSmileStartTime {
-                smilingDuration = Date().timeIntervalSince(startTime)
+                smilingDuration = min(Date().timeIntervalSince(startTime), targetDuration)
                 print("⏱ Smile duration: \(smilingDuration)s")
                 
                 if smilingDuration >= targetDuration && !hasReachedTarget {

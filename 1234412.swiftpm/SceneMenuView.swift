@@ -1,0 +1,195 @@
+import SwiftUI
+
+struct SceneCard: View {
+    let title: String
+    let subtitle: String
+    let description: String
+    let isLocked: Bool
+    let gradientColors: [Color]
+    let backgroundImage: String?
+    
+    var body: some View {
+        VStack(alignment: .leading, spacing: 12) {
+            // 标题区域
+            VStack(alignment: .leading, spacing: 4) {
+                Text(title)
+                    .font(.system(size: 28, weight: .bold, design: .rounded))
+                    .foregroundColor(.white)
+                
+                Text(subtitle)
+                    .font(.system(size: 18, weight: .regular, design: .rounded))
+                    .foregroundColor(.white.opacity(0.7))
+                    .lineLimit(1)
+                
+                Text(description)
+                    .font(.system(size: 16, weight: .regular, design: .rounded))
+                    .foregroundColor(.white.opacity(0.6))
+                    .lineLimit(2)
+                    .padding(.top, 4)
+            }
+            
+            Spacer()
+            
+            // 状态指示
+            HStack {
+                if isLocked {
+                    Image(systemName: "lock.fill")
+                        .font(.system(size: 18))
+                        .foregroundColor(.white.opacity(0.6))
+                } else {
+                    Image(systemName: "chevron.right.circle.fill")
+                        .font(.system(size: 22))
+                        .foregroundColor(.white)
+                }
+                
+                Spacer()
+            }
+        }
+        .padding(30)
+        .frame(width: 400, height: 180)
+        .background(
+            ZStack {
+                if let bgImage = backgroundImage {
+                    Image(bgImage)
+                        .resizable()
+                        .aspectRatio(contentMode: .fill)
+                        .frame(width: 400, height: 180)
+                        .clipped()
+                        .opacity(0.4)
+                }
+                
+                RoundedRectangle(cornerRadius: 28)
+                    .fill(Color.white.opacity(0.15))
+                
+                RoundedRectangle(cornerRadius: 28)
+                    .stroke(Color.white.opacity(0.2), lineWidth: 1)
+                
+                // 渐变光效
+                RoundedRectangle(cornerRadius: 28)
+                    .fill(
+                        LinearGradient(
+                            colors: gradientColors,
+                            startPoint: .topLeading,
+                            endPoint: .bottomTrailing
+                        )
+                    )
+                    .blendMode(.plusLighter)
+            }
+        )
+        .clipShape(RoundedRectangle(cornerRadius: 28))
+        .shadow(color: .black.opacity(0.2), radius: 15, x: 0, y: 5)
+    }
+}
+
+struct SceneMenuView: View {
+    @State private var selectedScene: Int? = nil
+    @State private var showSmileDetection = false
+    @State private var showVenusGuide = false
+    
+    var body: some View {
+        ZStack {
+            // 背景
+            LinearGradient(
+                gradient: Gradient(colors: [
+                    Color(red: 0.05, green: 0.05, blue: 0.15),
+                    Color(red: 0.1, green: 0.1, blue: 0.25)
+                ]),
+                startPoint: .topLeading,
+                endPoint: .bottomTrailing
+            )
+            .edgesIgnoringSafeArea(.all)
+            
+            // 粒子背景
+            EmotionParticleView()
+            
+            VStack(spacing: 40) {
+                // 标题
+                Text("Choose Your Journey")
+                    .font(.system(size: 38, weight: .bold, design: .rounded))
+                    .foregroundColor(.white)
+                    .padding(.top, 40)
+                
+                // 场景网格
+                LazyVGrid(columns: [
+                    GridItem(.flexible(), spacing: 30),
+                    GridItem(.flexible(), spacing: 30)
+                ], spacing: 30) {
+                    // 第一个场景：微笑检测
+                    Button {
+                        showVenusGuide = true
+                    } label: {
+                        SceneCard(
+                            title: "Venus Radiance",
+                            subtitle: "Let Your Smile Shine Like Venus",
+                            description: "Transform your emotions through the brightest smile in our solar system",
+                            isLocked: false,
+                            gradientColors: [
+                                Color(red: 1.0, green: 0.8, blue: 0.4).opacity(0.3),  // 金色
+                                Color(red: 1.0, green: 0.6, blue: 0.2).opacity(0.2),  // 暖橙色
+                                Color.clear
+                            ],
+                            backgroundImage: "venusbg"
+                        )
+                    }
+                    
+                    // 第二个场景（待解锁）
+                    SceneCard(
+                        title: "Coming Soon",
+                        subtitle: "Your next journey awaits",
+                        description: "Complete Venus Radiance to unlock",
+                        isLocked: true,
+                        gradientColors: [
+                            .white.opacity(0.2),
+                            .clear
+                        ],
+                        backgroundImage: nil
+                    )
+                    
+                    // 第三个场景（待解锁）
+                    SceneCard(
+                        title: "Coming Soon",
+                        subtitle: "Your next journey awaits",
+                        description: "Complete previous journey to unlock",
+                        isLocked: true,
+                        gradientColors: [
+                            .white.opacity(0.2),
+                            .clear
+                        ],
+                        backgroundImage: nil
+                    )
+                    
+                    // 第四个场景（待解锁）
+                    SceneCard(
+                        title: "Coming Soon",
+                        subtitle: "Your next journey awaits",
+                        description: "Complete previous journey to unlock",
+                        isLocked: true,
+                        gradientColors: [
+                            .white.opacity(0.2),
+                            .clear
+                        ],
+                        backgroundImage: nil
+                    )
+                }
+                .padding(.horizontal, 30)
+                
+                Spacer()
+                
+                // 底部提示
+                Text("Complete each journey to unlock the next")
+                    .font(.system(size: 16, weight: .regular, design: .rounded))
+                    .foregroundColor(.white.opacity(0.6))
+                    .padding(.bottom, 30)
+            }
+        }
+        .fullScreenCover(isPresented: $showVenusGuide) {
+            VenusGuideView(isShowingGuide: $showVenusGuide, startSmileDetection: {
+                showVenusGuide = false
+                showSmileDetection = true
+            })
+        }
+        .fullScreenCover(isPresented: $showSmileDetection) {
+            SmileDetectionView()
+        }
+    }
+} 
