@@ -105,21 +105,37 @@ final class VisionProcessor: NSObject, ObservableObject {
             print("😊 Smile detection result: \(isCurrentlySmiling)")
             
             Task { @MainActor [weak self] in
-                self?.updateSmileState(isSmiling: isCurrentlySmiling)
+                guard let self = self else { return }
+                await self.updateSmileState(isSmiling: isCurrentlySmiling)
             }
         }
         
         do {
+            // 根据设备方向确定视频处理方向
+            let orientation: CGImagePropertyOrientation
+            switch await UIDevice.current.orientation {
+            case .portrait:
+                orientation = .up
+            case .portraitUpsideDown:
+                orientation = .down
+            case .landscapeLeft:
+                orientation = .right
+            case .landscapeRight:
+                orientation = .left
+            default:
+                orientation = .up
+            }
+            
             try Self.sequenceHandler.perform(
                 [faceDetectionRequest],
                 on: pixelBuffer,
-                orientation: .right)
+                orientation: orientation)
         } catch {
             print("❌ Vision processing error: \(error.localizedDescription)")
         }
     }
     
-    private func updateSmileState(isSmiling: Bool) {
+    private func updateSmileState(isSmiling: Bool) async {
         self.isSmiling = isSmiling
         
         if isSmiling {

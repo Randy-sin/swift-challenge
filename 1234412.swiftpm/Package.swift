@@ -28,8 +28,8 @@ let package = Package(
             ],
             supportedInterfaceOrientations: [
                 .portrait,
-                .landscapeRight,
                 .landscapeLeft,
+                .landscapeRight,
                 .portraitUpsideDown
             ],
             capabilities: [

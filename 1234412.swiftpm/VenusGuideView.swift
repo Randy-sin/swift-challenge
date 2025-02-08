@@ -21,7 +21,7 @@ struct VenusGuideStepView: View {
     @State private var isIconLoaded = false
     
     var body: some View {
-        HStack(spacing: 16) {
+        HStack(alignment: .top, spacing: 16) {  // 改为顶部对齐
             // 图标容器
             ZStack {
                 Circle()
@@ -54,12 +54,11 @@ struct VenusGuideStepView: View {
                     isIconLoaded = true
                 } else {
                     print("❌ Error: System icon not found: \(icon)")
-                    // 如果图标加载失败，我们仍然设置为 true 以显示后备图标
                     isIconLoaded = true
                 }
             }
             
-            VStack(alignment: .leading, spacing: 4) {
+            VStack(alignment: .leading, spacing: 8) {  // 增加垂直间距
                 Text(title)
                     .font(.system(size: 18, weight: .bold, design: .rounded))
                     .foregroundColor(.white)
@@ -67,12 +66,12 @@ struct VenusGuideStepView: View {
                 Text(description)
                     .font(.system(size: 15, weight: .regular, design: .rounded))
                     .foregroundColor(.white.opacity(0.8))
+                    .fixedSize(horizontal: false, vertical: true)  // 确保文字完整显示
                     .lineSpacing(4)
             }
-            
-            Spacer()
+            .padding(.trailing, 16)  // 添加右侧边距
         }
-        .padding(16)
+        .padding(20)  // 增加整体内边距
         .background(
             RoundedRectangle(cornerRadius: 16)
                 .fill(Color.white.opacity(0.08))
@@ -100,7 +99,7 @@ struct VenusGuideView: View {
         (icon: "sun.max.fill", title: "Embrace the Warmth", description: "Feel the golden warmth of Venus fill your heart with joy", color: Color(red: 1.0, green: 0.5, blue: 0.2))
     ]
     
-    var body: some View {
+    public var body: some View {
         ZStack {
             backgroundView
             
@@ -112,8 +111,22 @@ struct VenusGuideView: View {
             ScrollView {
                 GeometryReader { geometry in
                     HStack(spacing: 0) {
-                        leftContent(geometry: geometry)
-                        rightContent(geometry: geometry)
+                        VStack(alignment: .leading, spacing: 36) {
+                            titleSection
+                            descriptionSection
+                            Spacer(minLength: 60)  // 添加底部间距
+                        }
+                        .frame(width: geometry.size.width * 0.5)
+                        .padding(.horizontal, 24)
+                        
+                        VStack(spacing: 32) {
+                            journeyTitle
+                            stepsSection
+                            Spacer()  // 让内容靠上
+                            startButton  // 将按钮移到这里
+                                .padding(.bottom, 40)
+                        }
+                        .frame(width: geometry.size.width * 0.45)
                     }
                 }
             }
@@ -148,24 +161,6 @@ struct VenusGuideView: View {
         .edgesIgnoringSafeArea(.all)
     }
     
-    private func leftContent(geometry: GeometryProxy) -> some View {
-        VStack(alignment: .leading, spacing: 36) {
-            titleSection
-            descriptionSection
-        }
-        .frame(width: geometry.size.width * 0.5)
-        .padding(.horizontal, 24)
-    }
-    
-    private func rightContent(geometry: GeometryProxy) -> some View {
-        VStack {
-            journeyTitle
-            stepsSection
-            startButton
-        }
-        .frame(width: geometry.size.width * 0.45)
-    }
-    
     private var titleSection: some View {
         VStack(alignment: .leading, spacing: 16) {
             Text("The Light of Venus")
@@ -192,7 +187,7 @@ struct VenusGuideView: View {
     }
     
     private var descriptionSection: some View {
-        VStack(alignment: .leading, spacing: 24) {
+        VStack(alignment: .leading, spacing: 32) {  // 增加描述卡片之间的间距
             descriptionItem(
                 title: "Venus's Embrace",
                 content: "Like Venus's warm glow in the morning sky, a smile can illuminate your entire being. This celestial light triggers the release of your body's natural joy - dopamine, endorphins, and serotonin.",
@@ -267,17 +262,38 @@ struct VenusGuideView: View {
     }
     
     private var stepsSection: some View {
-        VStack(spacing: 12) {
+        VStack(spacing: 32) {  // 增加卡片之间的间距
             ForEach(Array(steps.enumerated()), id: \.offset) { index, step in
-                VenusGuideStepView(
-                    icon: step.icon,
-                    title: step.title,
-                    description: step.description,
-                    color: step.color
-                )
-                .opacity(showContent ? 1 : 0)
-                .offset(y: showContent ? 0 : 20)
-                .animation(.easeOut.delay(Double(index) * 0.2), value: showContent)
+                VStack(spacing: 16) {  // 增加箭头和卡片之间的间距
+                    VenusGuideStepView(
+                        icon: step.icon,
+                        title: step.title,
+                        description: step.description,
+                        color: step.color
+                    )
+                    .opacity(showContent ? 1 : 0)
+                    .offset(y: showContent ? 0 : 20)
+                    .animation(.easeOut.delay(Double(index) * 0.2), value: showContent)
+                    
+                    // 在每个卡片下方添加箭头，除了最后一个
+                    if index < steps.count - 1 {
+                        Image(systemName: "arrow.down")
+                            .font(.system(size: 24, weight: .light))
+                            .foregroundStyle(
+                                LinearGradient(
+                                    colors: [
+                                        Color(red: 1.0, green: 0.85, blue: 0.4),
+                                        Color(red: 1.0, green: 0.7, blue: 0.2)
+                                    ],
+                                    startPoint: .top,
+                                    endPoint: .bottom
+                                )
+                            )
+                            .opacity(showContent ? 0.6 : 0)
+                            .offset(y: showContent ? 0 : 20)
+                            .animation(.easeOut.delay(Double(index) * 0.2 + 0.1), value: showContent)
+                    }
+                }
             }
         }
         .padding(.horizontal, 24)
@@ -291,18 +307,17 @@ struct VenusGuideView: View {
                 startSmileDetection()
             }
         } label: {
-            Text("Begin Your Celestial Journey")
-                .font(.system(size: 20, weight: .bold, design: .rounded))
+            Text("Begin Your Celestial Journey")  // 恢复完整文字
+                .font(.system(size: 17, weight: .semibold, design: .rounded))
                 .foregroundColor(.black)
-                .frame(height: 58)
-                .frame(width: 320)
+                .frame(height: 46)
+                .frame(width: 240)  // 稍微增加宽度以适应更长的文字
                 .background(
                     Capsule()
                         .fill(Color.white)
-                        .shadow(color: .white.opacity(0.3), radius: 15)
+                        .shadow(color: .white.opacity(0.3), radius: 10)
                 )
         }
-        .padding(.bottom, 40)
         .opacity(showContent ? 1 : 0)
         .offset(y: showContent ? 0 : 20)
     }
@@ -323,7 +338,7 @@ struct VenusGuideView: View {
     }
     
     private func descriptionItem(title: String, content: String, icon: String, color: Color) -> some View {
-        VStack(alignment: .leading, spacing: 10) {
+        VStack(alignment: .leading, spacing: 12) {  // 增加间距
             HStack {
                 Image(systemName: icon)
                     .font(.system(size: 20))
@@ -337,8 +352,11 @@ struct VenusGuideView: View {
             Text(content)
                 .font(.system(size: 16, weight: .regular, design: .rounded))
                 .foregroundColor(.white.opacity(0.8))
+                .fixedSize(horizontal: false, vertical: true)  // 确保文字完整显示
                 .lineSpacing(5)
         }
+        .padding(.horizontal, 20)  // 增加水平内边距
+        .padding(.vertical, 16)    // 增加垂直内边距
     }
 }
 

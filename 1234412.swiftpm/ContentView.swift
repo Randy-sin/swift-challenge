@@ -18,8 +18,5 @@ struct ContentView: View {
                     .transition(.opacity)
             }
         }
-        .onAppear {
-            UIDevice.current.setValue(UIInterfaceOrientation.landscapeRight.rawValue, forKey: "orientation")
-        }
     }
 }

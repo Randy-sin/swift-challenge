@@ -60,7 +60,7 @@ struct SmileDetectionView: View {
                                     .padding(.vertical, 10)
                                     .background(
                                         Capsule()
-                                            .fill(Color.white.opacity(0.2))
+                                            .fill(Color.black.opacity(0.6))
                                             .overlay(
                                                 Capsule()
                                                     .stroke(Color.white.opacity(0.3), lineWidth: 1)

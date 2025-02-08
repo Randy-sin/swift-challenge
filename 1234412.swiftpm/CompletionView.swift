@@ -77,7 +77,7 @@ struct CompletionView: View {
     private let backgroundTexts = [
         (text: "You're Not Alone", color: Color(red: 1.0, green: 0.85, blue: 0.4), scale: 1.15, rotation: -5, position: CGPoint(x: 0.15, y: 0.08)),
         (text: "WHO Report 2023", color: Color(red: 0.4, green: 0.8, blue: 1.0), scale: 1.1, rotation: -15, position: CGPoint(x: 0.4, y: 0.15)),
-        (text: "Global Depression Statistics", color: Color(red: 0.7, green: 0.4, blue: 1.0), scale: 0.9, rotation: 10, position: CGPoint(x: 0.85, y: 0.25)),
+        (text: "Global Depression Statistics", color: Color(red: 0.7, green: 0.4, blue: 1.0), scale: 0.9, rotation: 10, position: CGPoint(x: 0.85, y: 0.10)),
         (text: "5% of Adults Worldwide", color: Color(red: 1.0, green: 0.7, blue: 0.3), scale: 1.2, rotation: -8, position: CGPoint(x: 0.2, y: 0.85)),
         (text: "Seeking Light Together", color: Color(red: 0.3, green: 0.7, blue: 0.9), scale: 0.95, rotation: 12, position: CGPoint(x: 0.9, y: 0.75)),
         (text: "Every 40 Seconds", color: Color(red: 0.8, green: 0.5, blue: 1.0), scale: 1.0, rotation: 15, position: CGPoint(x: 0.8, y: 0.5)),
@@ -88,6 +88,9 @@ struct CompletionView: View {
     // 添加动画状态
     @State private var backgroundTextScales: [CGFloat] = Array(repeating: 1.0, count: 8)
     @State private var backgroundTextOpacities: [Double] = Array(repeating: 0.0, count: 8)
+    @State private var heartbeatScale: CGFloat = 1.0
+    @State private var heartbeatOpacity: Double = 0.8
+    @State private var guideTextOpacity: Double = 0  // 添加引导文字透明度状态
     
     var body: some View {
         GeometryReader { geometry in
@@ -134,6 +137,43 @@ struct CompletionView: View {
                         .blur(radius: 0.6)  // 添加轻微模糊效果
                 }
                 
+                // 添加引导文字
+                if !planetExpanded {
+                    VStack(spacing: 12) {
+                        Image(systemName: "arrow.up")
+                            .font(.system(size: 24, weight: .light))
+                            .foregroundStyle(
+                                LinearGradient(
+                                    colors: [
+                                        Color(red: 1.0, green: 0.85, blue: 0.4),  // 金色
+                                        Color(red: 1.0, green: 0.7, blue: 0.2)    // 暖金色
+                                    ],
+                                    startPoint: .leading,
+                                    endPoint: .trailing
+                                )
+                            )
+                            .opacity(guideTextOpacity)
+                            .shadow(color: Color(red: 1.0, green: 0.8, blue: 0.3).opacity(0.5), radius: 10)
+                        
+                        Text("Touch Venus to carry your smile\nback to where your journey began")
+                            .font(.system(size: 18, weight: .light, design: .serif))
+                            .multilineTextAlignment(.center)
+                            .foregroundStyle(
+                                LinearGradient(
+                                    colors: [
+                                        Color(red: 1.0, green: 0.85, blue: 0.4),  // 金色
+                                        Color(red: 1.0, green: 0.7, blue: 0.2)    // 暖金色
+                                    ],
+                                    startPoint: .leading,
+                                    endPoint: .trailing
+                                )
+                            )
+                            .opacity(guideTextOpacity)
+                            .shadow(color: Color(red: 1.0, green: 0.8, blue: 0.3).opacity(0.5), radius: 10)
+                    }
+                    .position(x: geometry.size.width * 0.2, y: geometry.size.height * 0.85)
+                }
+                
                 // 内容容器
                 HStack(spacing: 0) {
                     // 左侧：3D星球场景
@@ -157,23 +197,23 @@ struct CompletionView: View {
                             .opacity(isPlanetTapped ? 0 : 1)
                         
                         PlanetSceneView()
-                            .frame(width: geometry.size.width * (planetExpanded ? 4.5 : 0.4))
-                            .scaleEffect(isPlanetTapped ? (planetExpanded ? 2.0 : 1.2) : planetScale)
+                            .frame(width: geometry.size.width * 0.4)
+                            .scaleEffect(isPlanetTapped ? 0.9 : planetScale)
+                            .opacity(isPlanetTapped ? 0 : 1)
                             .offset(x: planetPosition.width, y: planetPosition.height)
                             .blur(radius: blurRadius)
                             .brightness(brightness)
                             .gesture(
                                 TapGesture()
                                     .onEnded { _ in
-                                        // 第一阶段：轻微放大，保持在原位置
-                                        withAnimation(.spring(response: 0.6, dampingFraction: 0.8)) {
+                                        // 添加向右移动的动画
+                                        withAnimation(.easeInOut(duration: 0.8)) {
                                             isPlanetTapped = true
-                                            planetScale = 1.2
-                                            // 仅略微向右移动以平衡视觉效果
-                                            planetPosition = CGSize(
-                                                width: geometry.size.width * 0.1,
-                                                height: 0
-                                            )
+                                            planetScale = 0.9
+                                            planetPosition = CGSize(width: geometry.size.width, height: 0)
+                                            starAlpha = 0
+                                            blurRadius = 10
+                                            brightness = 0.3
                                         }
                                         
                                         // 淡出文字
@@ -183,30 +223,9 @@ struct CompletionView: View {
                                             showSubText = false
                                         }
                                         
-                                        // 第二阶段：主要放大阶段
-                                        DispatchQueue.main.asyncAfter(deadline: .now() + 0.6) {
-                                            withAnimation(.easeInOut(duration: 1.2)) {
-                                                planetExpanded = true
-                                                // 保持在接近原位置，让放大效果更明显
-                                                planetPosition = CGSize(
-                                                    width: geometry.size.width * 0.05,
-                                                    height: 0
-                                                )
-                                                starAlpha = 0
-                                            }
-                                            
-                                            // 第三阶段：最终放大和转场
-                                            DispatchQueue.main.asyncAfter(deadline: .now() + 0.8) {
-                                                withAnimation(.easeInOut(duration: 0.7)) {
-                                                    blurRadius = 30
-                                                    brightness = 0.6  // 增加亮度
-                                                }
-                                                
-                                                // 最终阶段：返回菜单
-                                                DispatchQueue.main.asyncAfter(deadline: .now() + 0.4) {
-                                                    dismiss()
-                                                }
-                                            }
+                                        // 延迟返回菜单
+                                        DispatchQueue.main.asyncAfter(deadline: .now() + 1.0) {
+                                            dismiss()
                                         }
                                     }
                             )
@@ -244,8 +263,22 @@ struct CompletionView: View {
                                     .font(.system(size: 46, weight: .bold))
                                     .foregroundStyle(blueGradient)
                                 Text("their hearts beating with yours")
-                                    .font(.system(size: 24, weight: .light))
-                                    .foregroundColor(.white.opacity(0.8))
+                                    .font(.system(size: 24, weight: .medium))
+                                    .foregroundStyle(
+                                        LinearGradient(
+                                            colors: [
+                                                Color(red: 0.6, green: 0.8, blue: 1.0),  // 浅蓝色
+                                                Color(red: 0.4, green: 0.6, blue: 0.9),  // 中蓝色
+                                                Color(red: 0.3, green: 0.5, blue: 0.8)   // 深蓝色
+                                            ],
+                                            startPoint: .leading,
+                                            endPoint: .trailing
+                                        )
+                                    )
+                                    .shadow(color: Color(red: 0.4, green: 0.6, blue: 1.0).opacity(0.8), radius: 8)
+                                    .shadow(color: Color(red: 0.4, green: 0.6, blue: 1.0).opacity(0.5), radius: 4)
+                                    .scaleEffect(heartbeatScale)
+                                    .opacity(heartbeatOpacity)
                             }
                             .opacity(textOpacity3)
                             .shadow(color: Color(red: 0.3, green: 0.7, blue: 0.9).opacity(0.5), radius: 10)
@@ -322,6 +355,20 @@ struct CompletionView: View {
                 ) {
                     backgroundTextScales[index] = 1.1
                 }
+            }
+
+            // 添加心跳动画
+            withAnimation(
+                .easeInOut(duration: 1.5)
+                .repeatForever(autoreverses: true)
+            ) {
+                heartbeatScale = 1.05
+                heartbeatOpacity = 1.0
+            }
+
+            // 添加引导文字动画，在所有主要内容显示后
+            withAnimation(.easeIn(duration: 1.2).delay(6.0)) {
+                guideTextOpacity = 0.8
             }
         }
     }

@@ -7,7 +7,6 @@ struct LaunchView: View {
     @State private var buttonOpacity: Double = 0
     @State private var particleOpacity: Double = 0
     @State private var titleOffset: CGFloat = 50
-    @State private var showMenu = false
     
     var body: some View {
         ZStack {
@@ -86,7 +85,6 @@ struct LaunchView: View {
                 // 按钮区域
                 Button(action: {
                     withAnimation(.easeInOut(duration: 0.8)) {
-                        showMenu = true
                         showLaunchScreen = false
                     }
                 }) {
