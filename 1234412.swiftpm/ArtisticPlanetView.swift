@@ -3,227 +3,395 @@ import PencilKit
 
 struct ArtisticPlanetView: View {
     @Environment(\.dismiss) private var dismiss
-    @State private var currentStep = 1
+    @StateObject private var viewModel = ArtisticPlanetViewModel()
+    @State private var canvasView = PKCanvasView()
     @State private var selectedColor: DrawingColor = .blue
+    @State private var selectedTool: DrawingTool = .pen
     @State private var brushSize: CGFloat = DrawingTools.brushSizes[1]
     @State private var showColorMeaning = false
     @State private var showUndoAlert = false
-    @State private var canvasView = PKCanvasView()
-    @State private var selectedTool: DrawingTool = .pen
-    @State private var showNextStepAlert = false
+    @State private var currentStep = 1
     @State private var showCompleteAlert = false
-    @StateObject private var viewModel = ArtisticPlanetViewModel()
+    @State private var showCompletionDialog = false
+    @State private var showArtisticCompletion = false
     
     let steps = [
-        (
-            title: "Flower of Life",
-            description: "Draw a flower that symbolizes hope. Let the petals spread wide, expressing the vitality of life through warm colors.",
-            prompt: "Imagine a blooming flower that represents the hope and strength within your heart."
-        ),
-        (
-            title: "Tree of Resilience",
-            description: "Create a strong tree with roots deep in the earth and branches reaching for the sky.",
-            prompt: "Like this tree, you stand strong through all storms, growing ever taller."
-        ),
-        (
-            title: "River of Emotions",
-            description: "Paint a winding river that carries your emotions towards distant horizons.",
-            prompt: "Let your brushstrokes flow naturally like water, washing away all worries."
-        ),
-        (
-            title: "Stars of Hope",
-            description: "Add bright stars that shine through the darkness, guiding the way forward.",
-            prompt: "Each star you draw is a wish for the future, illuminating your path."
-        )
+        (title: "Blooming Hope", description: "Paint a flower with warm colors to represent hope", color: DrawingColor.red.color),
+        (title: "Tree of Life", description: "Draw a tree reaching towards the starry sky", color: DrawingColor.green.color),
+        (title: "River of Emotions", description: "Create a flowing river to symbolize emotional journey", color: DrawingColor.blue.color),
+        (title: "Starlight Dreams", description: "Add shining stars to illuminate your world", color: DrawingColor.yellow.color)
     ]
     
     var body: some View {
         GeometryReader { geometry in
             ZStack {
                 // Background
-                LinearGradient(
-                    gradient: Gradient(colors: [.purple.opacity(0.6), .blue.opacity(0.6)]),
-                    startPoint: .topLeading,
-                    endPoint: .bottomTrailing
-                )
-                .edgesIgnoringSafeArea(.all)
+                Color(red: 0.05, green: 0.05, blue: 0.15)
+                    .edgesIgnoringSafeArea(.all)
                 
-                // Particle Effect Background
+                // Starfield effect
                 EmotionParticleView()
-                    .opacity(0.4)
+                    .opacity(0.8)
                 
-                if viewModel.showPlanetView {
-                    // 3D Planet View
-                    PlanetView(viewModel: viewModel)
-                        .transition(.opacity)
-                } else {
-                    HStack(spacing: 0) {
-                        // Drawing Tools
+                VStack(spacing: 0) {
+                    // Top Navigation and Step Guide
+                    VStack(spacing: 12) {
+                        HStack {
+                            Button(action: { dismiss() }) {
+                                Image(systemName: "xmark")
+                                    .font(.system(size: 20, weight: .medium))
+                                    .foregroundColor(.white)
+                                    .frame(width: 36, height: 36)
+                                    .background(.ultraThinMaterial)
+                                    .clipShape(Circle())
+                            }
+                            
+                            Spacer()
+                            
+                            // Step Navigation
+                            HStack(spacing: 20) {
+                                if currentStep > 1 {
+                                    Button(action: {
+                                        withAnimation {
+                                            viewModel.saveDrawing(canvasView.drawing, forStep: currentStep)
+                                            currentStep -= 1
+                                            selectedColor = getStepColor(step: currentStep)
+                                            if let previousDrawing = viewModel.getDrawing(forStep: currentStep) {
+                                                canvasView.drawing = previousDrawing
+                                            } else {
+                                                canvasView.drawing = PKDrawing()
+                                            }
+                                        }
+                                    }) {
+                                        HStack(spacing: 8) {
+                                            Image(systemName: "chevron.left")
+                                            Text("Previous")
+                                        }
+                                        .font(.system(size: 15, weight: .medium))
+                                        .foregroundColor(.white)
+                                        .padding(.horizontal, 16)
+                                        .padding(.vertical, 8)
+                                        .background(.ultraThinMaterial)
+                                        .cornerRadius(16)
+                                    }
+                                }
+                                
+                                if currentStep < steps.count {
+                                    Button(action: {
+                                        withAnimation {
+                                            viewModel.saveDrawing(canvasView.drawing, forStep: currentStep)
+                                            currentStep += 1
+                                            selectedColor = getStepColor(step: currentStep)
+                                            if let nextDrawing = viewModel.getDrawing(forStep: currentStep) {
+                                                canvasView.drawing = nextDrawing
+                                            } else {
+                                                canvasView.drawing = PKDrawing()
+                                            }
+                                        }
+                                    }) {
+                                        HStack(spacing: 8) {
+                                            Text("Next")
+                                            Image(systemName: "chevron.right")
+                                        }
+                                        .font(.system(size: 15, weight: .medium))
+                                        .foregroundColor(.white)
+                                        .padding(.horizontal, 16)
+                                        .padding(.vertical, 8)
+                                        .background(.ultraThinMaterial)
+                                        .cornerRadius(16)
+                                    }
+                                } else {
+                                    Button(action: {
+                                        viewModel.saveDrawing(canvasView.drawing, forStep: currentStep)
+                                        showCompletionDialog = true
+                                    }) {
+                                        HStack(spacing: 8) {
+                                            Text("Complete")
+                                            Image(systemName: "checkmark")
+                                        }
+                                        .font(.system(size: 15, weight: .medium))
+                                        .foregroundColor(.white)
+                                        .padding(.horizontal, 16)
+                                        .padding(.vertical, 8)
+                                        .background(Color.green)
+                                        .cornerRadius(16)
+                                    }
+                                }
+                            }
+                            
+                            Spacer()
+                            
+                            // Tool Buttons
+                            HStack(spacing: 16) {
+                                Button(action: { showColorMeaning = true }) {
+                                    Image(systemName: "info.circle")
+                                        .font(.system(size: 20, weight: .medium))
+                                }
+                                
+                                Button(action: { showUndoAlert = true }) {
+                                    Image(systemName: "arrow.uturn.backward")
+                                        .font(.system(size: 20, weight: .medium))
+                                }
+                                
+                                Button(action: { canvasView.drawing = PKDrawing() }) {
+                                    Image(systemName: "trash")
+                                        .font(.system(size: 20, weight: .medium))
+                                }
+                            }
+                            .foregroundColor(.white)
+                        }
+                        .padding(.horizontal, 24)
+                        
+                        // Step Guide
+                        VStack(spacing: 8) {
+                            Text(steps[currentStep - 1].title)
+                                .font(.system(size: 28, weight: .bold, design: .rounded))
+                                .foregroundColor(steps[currentStep - 1].color)
+                            
+                            Text(steps[currentStep - 1].description)
+                                .font(.system(size: 17, weight: .regular, design: .rounded))
+                                .foregroundColor(.white.opacity(0.9))
+                                .multilineTextAlignment(.center)
+                                .padding(.horizontal, 40)
+                        }
+                        .padding(.vertical, 20)
+                        .frame(maxWidth: .infinity)
+                        .background(
+                            Rectangle()
+                                .fill(.ultraThinMaterial)
+                                .overlay(
+                                    Rectangle()
+                                        .fill(
+                                            LinearGradient(
+                                                colors: [
+                                                    steps[currentStep - 1].color.opacity(0.3),
+                                                    steps[currentStep - 1].color.opacity(0.1)
+                                                ],
+                                                startPoint: .top,
+                                                endPoint: .bottom
+                                            )
+                                        )
+                                        .blendMode(.overlay)
+                                )
+                        )
+                    }
+                    
+                    // Main Content Area
+                    HStack(spacing: 24) {
+                        // Left Toolbar
                         DrawingToolbar(
                             selectedColor: $selectedColor,
                             brushSize: $brushSize,
                             selectedTool: $selectedTool
                         )
-                        .padding(.leading, 20)
+                        .padding(.leading, 24)
+                        .onChange(of: selectedColor) { newColor in
+                            viewModel.selectedColor = newColor
+                        }
                         
-                        // Canvas
+                        // Canvas Area
                         ZStack {
-                            DrawingCanvas(
+                            // Canvas Background
+                            RoundedRectangle(cornerRadius: 24)
+                                .fill(Color.white.opacity(0.98))
+                                .shadow(color: .black.opacity(0.2), radius: 20)
+                            
+                            // Canvas
+                            DrawingCanvasView(
                                 canvasView: $canvasView,
                                 tool: selectedTool,
                                 color: selectedColor,
                                 brushSize: brushSize
                             )
-                            .alert("Color Meaning", isPresented: $showColorMeaning) {
-                                Button("OK", role: .cancel) { }
-                            } message: {
-                                Text(selectedColor.emotionalMeaning)
-                            }
-                            .alert("Undo Drawing", isPresented: $showUndoAlert) {
-                                Button("Cancel", role: .cancel) { }
-                                Button("Undo", role: .destructive) {
-                                    canvasView.undoManager?.undo()
-                                }
-                            } message: {
-                                Text("Do you want to undo your last drawing?")
-                            }
-                            .alert("Next Step", isPresented: $showNextStepAlert) {
-                                Button("Keep Drawing", role: .cancel) { }
-                                Button("Continue", role: .none) {
-                                    // 保存当前步骤的绘画
-                                    viewModel.saveDrawing(canvasView.drawing, forStep: currentStep)
-                                    // 清空画布
-                                    canvasView.drawing = PKDrawing()
-                                    // 进入下一步
-                                    withAnimation {
-                                        currentStep += 1
-                                    }
-                                }
-                            } message: {
-                                Text("Would you like to proceed to the next step? Your current drawing will be saved.")
-                            }
-                            .alert("Complete Artwork", isPresented: $showCompleteAlert) {
-                                Button("Keep Drawing", role: .cancel) { }
-                                Button("Create Planet", role: .none) {
-                                    // Save the last drawing
-                                    viewModel.saveDrawing(canvasView.drawing, forStep: currentStep)
-                                    // Generate and show the final planet
-                                    withAnimation(.easeInOut(duration: 0.8)) {
-                                        viewModel.generateFinalPlanet()
-                                        viewModel.showPlanetView = true
-                                    }
-                                }
-                            } message: {
-                                Text("Would you like to complete your healing artwork and create your planet?")
-                            }
+                            .clipShape(RoundedRectangle(cornerRadius: 24))
+                        }
+                        .frame(maxWidth: .infinity)
+                        .padding(.vertical, 24)
+                        
+                        // 预览视图
+                        VStack {
+                            // 预览标题
+                            Text("Planet Preview")
+                                .font(.system(size: 15, weight: .medium))
+                                .foregroundColor(.white)
+                                .padding(.bottom, 8)
                             
-                            // Top Navigation Bar
-                            VStack {
-                                HStack {
-                                    Button(action: { dismiss() }) {
-                                        Image(systemName: "chevron.left")
-                                            .font(.title2)
-                                            .foregroundColor(.white)
-                                    }
-                                    
-                                    Spacer()
-                                    
-                                    Button(action: { showColorMeaning = true }) {
-                                        Image(systemName: "info.circle")
-                                            .font(.title2)
-                                            .foregroundColor(.white)
-                                    }
-                                    
-                                    Button(action: { showUndoAlert = true }) {
-                                        Image(systemName: "arrow.uturn.backward")
-                                            .font(.title2)
-                                            .foregroundColor(.white)
-                                    }
-                                    .padding(.horizontal)
-                                    
-                                    Button(action: { canvasView.drawing = PKDrawing() }) {
-                                        Image(systemName: "trash")
-                                            .font(.title2)
-                                            .foregroundColor(.white)
-                                    }
-                                }
-                                .padding()
-                                .background(.ultraThinMaterial)
-                                
-                                Spacer()
-                                
-                                // Step Information
-                                VStack(spacing: 16) {
-                                    Text(steps[currentStep - 1].title)
-                                        .font(.title2)
-                                        .bold()
-                                        .foregroundColor(.white)
-                                    
-                                    Text(steps[currentStep - 1].description)
-                                        .font(.body)
-                                        .foregroundColor(.white.opacity(0.9))
-                                        .multilineTextAlignment(.center)
-                                        .padding(.horizontal)
-                                    
-                                    Text(steps[currentStep - 1].prompt)
-                                        .font(.system(.body, design: .serif))
-                                        .italic()
-                                        .foregroundColor(.white.opacity(0.8))
-                                        .padding(.top, 4)
-                                    
-                                    // Navigation Buttons
-                                    HStack(spacing: 20) {
-                                        if currentStep > 1 {
-                                            Button(action: {
-                                                withAnimation {
-                                                    currentStep -= 1
-                                                    // 恢复上一步的绘画
-                                                    if let previousDrawing = viewModel.getDrawing(forStep: currentStep) {
-                                                        canvasView.drawing = previousDrawing
-                                                    }
-                                                }
-                                            }) {
-                                                HStack {
-                                                    Image(systemName: "chevron.left")
-                                                    Text("Previous")
-                                                }
-                                                .foregroundColor(.white)
-                                                .padding(.horizontal, 20)
-                                                .padding(.vertical, 10)
-                                                .background(Color.white.opacity(0.2))
-                                                .cornerRadius(10)
-                                            }
-                                        }
-                                        
-                                        if currentStep < steps.count {
-                                            Button(action: { showNextStepAlert = true }) {
-                                                HStack {
-                                                    Text("Next")
-                                                    Image(systemName: "chevron.right")
-                                                }
-                                                .foregroundColor(.white)
-                                                .padding(.horizontal, 20)
-                                                .padding(.vertical, 10)
-                                                .background(Color.white.opacity(0.2))
-                                                .cornerRadius(10)
-                                            }
-                                        }
-                                    }
-                                }
-                                .padding()
-                                .background(.ultraThinMaterial)
-                                .cornerRadius(15)
-                                .padding(.bottom)
+                            // 预览窗口
+                            Button(action: {
+                                viewModel.showFullScreenPreview = true
+                            }) {
+                                Planet3DSceneView(viewModel: viewModel)
+                                    .frame(width: 200, height: 200)
+                                    .background(
+                                        RoundedRectangle(cornerRadius: 16)
+                                            .fill(Color.black.opacity(0.3))
+                                            .background(.ultraThinMaterial)
+                                    )
+                                    .clipShape(RoundedRectangle(cornerRadius: 16))
+                                    .overlay(
+                                        RoundedRectangle(cornerRadius: 16)
+                                            .stroke(Color.white.opacity(0.2), lineWidth: 1)
+                                    )
                             }
                         }
-                        .padding(.horizontal)
+                        .padding(.trailing, 24)
                     }
                 }
             }
+            .alert("Color Meaning", isPresented: $showColorMeaning) {
+                Button("Got it", role: .cancel) { }
+            } message: {
+                Text(selectedColor.emotionalMeaning)
+            }
+            .alert("Undo Drawing", isPresented: $showUndoAlert) {
+                Button("Cancel", role: .cancel) { }
+                Button("Undo", role: .destructive) {
+                    canvasView.undoManager?.undo()
+                }
+            } message: {
+                Text("Do you want to undo your last drawing?")
+            }
+            .fullScreenCover(isPresented: $viewModel.showFullScreenPreview) {
+                ZStack {
+                    // 背景
+                    Color.black.edgesIgnoringSafeArea(.all)
+                    
+                    // 3D场景
+                    Planet3DSceneView(viewModel: viewModel)
+                    
+                    // 关闭按钮
+                    VStack {
+                        HStack {
+                            Button(action: {
+                                viewModel.showFullScreenPreview = false
+                            }) {
+                                Image(systemName: "xmark")
+                                    .font(.system(size: 20, weight: .medium))
+                                    .foregroundColor(.white)
+                                    .padding(12)
+                                    .background(.ultraThinMaterial)
+                                    .clipShape(Circle())
+                            }
+                            .padding(20)
+                            
+                            Spacer()
+                        }
+                        Spacer()
+                    }
+                }
+            }
+            .overlay {
+                if showCompletionDialog {
+                    // 自定义完成对话框
+                    ZStack {
+                        // 背景遮罩
+                        Color.black.opacity(0.4)
+                            .edgesIgnoringSafeArea(.all)
+                            .opacity(showCompletionDialog ? 1 : 0)
+                            .onTapGesture {
+                                withAnimation(.easeOut(duration: 0.3)) {
+                                    showCompletionDialog = false
+                                }
+                            }
+                        
+                        // 对话框
+                        VStack(spacing: 24) {
+                            // 标题
+                            Text("Complete Your Artwork")
+                                .font(.system(size: 24, weight: .bold, design: .rounded))
+                                .foregroundColor(.white)
+                            
+                            // 描述
+                            Text("Your artistic journey has created something unique. Would you like to complete your healing artwork?")
+                                .font(.system(size: 17, weight: .regular, design: .rounded))
+                                .foregroundColor(.white.opacity(0.9))
+                                .multilineTextAlignment(.center)
+                                .fixedSize(horizontal: false, vertical: true)
+                                .padding(.horizontal, 20)
+                            
+                            // 按钮
+                            HStack(spacing: 16) {
+                                // Keep Drawing 按钮
+                                Button(action: {
+                                    withAnimation(.easeOut(duration: 0.3)) {
+                                        showCompletionDialog = false
+                                    }
+                                }) {
+                                    Text("Keep Drawing")
+                                        .font(.system(size: 17, weight: .semibold, design: .rounded))
+                                        .foregroundColor(.white)
+                                        .frame(width: 140, height: 44)
+                                        .background(
+                                            Capsule()
+                                                .fill(.ultraThinMaterial)
+                                        )
+                                }
+                                
+                                // Complete 按钮
+                                Button(action: {
+                                    viewModel.generateFinalPlanet()
+                                    withAnimation(.easeOut(duration: 0.3)) {
+                                        showCompletionDialog = false
+                                    }
+                                    showArtisticCompletion = true
+                                }) {
+                                    Text("Complete")
+                                        .font(.system(size: 17, weight: .semibold, design: .rounded))
+                                        .foregroundColor(.black)
+                                        .frame(width: 140, height: 44)
+                                        .background(
+                                            Capsule()
+                                                .fill(Color.white)
+                                        )
+                                }
+                            }
+                        }
+                        .padding(32)
+                        .background(
+                            RoundedRectangle(cornerRadius: 24)
+                                .fill(Color(red: 0.1, green: 0.1, blue: 0.2))
+                                .background(.ultraThinMaterial)
+                                .clipShape(RoundedRectangle(cornerRadius: 24))
+                        )
+                        .overlay(
+                            RoundedRectangle(cornerRadius: 24)
+                                .stroke(Color.white.opacity(0.2), lineWidth: 1)
+                        )
+                        .padding(40)
+                        .scaleEffect(showCompletionDialog ? 1 : 0.8)
+                        .opacity(showCompletionDialog ? 1 : 0)
+                    }
+                    .transition(.opacity)
+                }
+            }
+            .onChange(of: showCompletionDialog) { newValue in
+                if newValue {
+                    withAnimation(.spring(response: 0.4, dampingFraction: 0.8)) {
+                        showCompletionDialog = true
+                    }
+                }
+            }
+            .onAppear {
+                selectedColor = getStepColor(step: currentStep)
+            }
+        }
+        .fullScreenCover(isPresented: $showArtisticCompletion) {
+            ArtisticCompletionView(viewModel: viewModel)
+        }
+    }
+    
+    private func getStepColor(step: Int) -> DrawingColor {
+        switch step {
+        case 1: return .red
+        case 2: return .green
+        case 3: return .blue
+        case 4: return .yellow
+        default: return .blue
         }
     }
 }
 
+// 保持原有的 DrawingCanvas 和 CanvasView 结构体不变
 struct DrawingCanvas: View {
     @Binding var canvasView: PKCanvasView
     let tool: DrawingTool
@@ -253,62 +421,6 @@ struct CanvasView: UIViewRepresentable {
     
     func updateUIView(_ uiView: PKCanvasView, context: Context) {
         uiView.tool = tool
-    }
-}
-
-// New PlanetView for displaying the 3D planet
-struct PlanetView: View {
-    @ObservedObject var viewModel: ArtisticPlanetViewModel
-    @Environment(\.dismiss) private var dismiss
-    
-    var body: some View {
-        ZStack {
-            // 3D Scene
-            Planet3DSceneView(viewModel: viewModel)
-            
-            // Navigation
-            VStack {
-                HStack {
-                    Button(action: { dismiss() }) {
-                        Image(systemName: "chevron.left")
-                            .font(.title2)
-                            .foregroundColor(.white)
-                            .padding(12)
-                            .background(.ultraThinMaterial)
-                            .clipShape(Circle())
-                    }
-                    .padding(.leading, 20)
-                    
-                    Spacer()
-                    
-                    Text("Your Healing Planet")
-                        .font(.title2)
-                        .bold()
-                        .foregroundColor(.white)
-                    
-                    Spacer()
-                }
-                .padding(.top, 20)
-                
-                Spacer()
-                
-                // Planet description
-                VStack(spacing: 12) {
-                    Text("Your Artistic Journey")
-                        .font(.headline)
-                        .foregroundColor(.white)
-                    
-                    Text("This planet contains all your emotional expressions,\nfrom the Flower of Life to the Stars of Hope.")
-                        .font(.body)
-                        .multilineTextAlignment(.center)
-                        .foregroundColor(.white.opacity(0.8))
-                }
-                .padding()
-                .background(.ultraThinMaterial)
-                .cornerRadius(15)
-                .padding(.bottom, 30)
-            }
-        }
     }
 }
 

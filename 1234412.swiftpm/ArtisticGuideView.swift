@@ -200,23 +200,19 @@ struct ArtisticGuideView: View {
                                 currentStep -= 1
                             }
                         }) {
-                            HStack(spacing: 8) {
+                            HStack {
                                 Image(systemName: "chevron.left")
                                 Text("Previous")
                             }
-                            .font(.system(size: 17, weight: .semibold, design: .rounded))
+                            .font(.system(size: 17, weight: .semibold))
                             .foregroundColor(.white)
-                            .padding(.horizontal, 24)
-                            .padding(.vertical, 14)
+                            .padding(.horizontal, 20)
+                            .padding(.vertical, 10)
                             .background(
-                                RoundedRectangle(cornerRadius: 14)
-                                    .fill(Color.white.opacity(0.15))
-                                    .background(.ultraThinMaterial)
+                                RoundedRectangle(cornerRadius: 20)
+                                    .fill(.ultraThinMaterial)
                             )
-                            .overlay(
-                                RoundedRectangle(cornerRadius: 14)
-                                    .stroke(Color.white.opacity(0.2), lineWidth: 1)
-                            )
+                            .clipShape(RoundedRectangle(cornerRadius: 20))
                         }
                     }
                     
@@ -235,12 +231,13 @@ struct ArtisticGuideView: View {
                             .padding(.horizontal, 24)
                             .padding(.vertical, 14)
                             .background(
-                                RoundedRectangle(cornerRadius: 14)
+                                Capsule()
                                     .fill(Color.white.opacity(0.15))
                                     .background(.ultraThinMaterial)
+                                    .clipShape(Capsule())
                             )
                             .overlay(
-                                RoundedRectangle(cornerRadius: 14)
+                                Capsule()
                                     .stroke(Color.white.opacity(0.2), lineWidth: 1)
                             )
                         }
@@ -260,7 +257,7 @@ struct ArtisticGuideView: View {
                             .padding(.horizontal, 24)
                             .padding(.vertical, 14)
                             .background(Color.white)
-                            .cornerRadius(14)
+                            .clipShape(Capsule())
                             .shadow(color: Color.white.opacity(0.3), radius: 10)
                         }
                     }
@@ -282,15 +279,11 @@ struct ArtisticGuideView: View {
                         Image(systemName: "chevron.left")
                             .font(.system(size: 24, weight: .medium))
                             .foregroundColor(.white)
-                            .padding(12)
+                            .frame(width: 44, height: 44)
                             .background(
                                 Circle()
-                                    .fill(Color.black.opacity(0.6))
-                                    .background(.ultraThinMaterial)
-                            )
-                            .overlay(
-                                Circle()
-                                    .stroke(Color.white.opacity(0.2), lineWidth: 1)
+                                    .fill(.ultraThinMaterial)
+                                    .shadow(color: .black.opacity(0.15), radius: 8, x: 0, y: 4)
                             )
                     }
                     .padding(.leading, 20)

@@ -59,7 +59,7 @@ struct Planet3DSceneView: UIViewRepresentable {
         
         func canvasViewDrawingDidChange(_ canvasView: PKCanvasView) {
             parent.viewModel.currentDrawing = canvasView.drawing
-            parent.viewModel.updatePlanetTexture(with: canvasView.drawing)
+            parent.viewModel.updateCurrentDrawing(canvasView.drawing)
         }
     }
 } 

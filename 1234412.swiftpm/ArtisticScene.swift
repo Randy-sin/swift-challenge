@@ -1,5 +1,4 @@
 @_exported import SwiftUI
-@_exported import Common
 @_exported import SceneKit
 @_exported import PencilKit
 
