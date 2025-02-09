@@ -28,7 +28,7 @@ struct DrawingCanvasView: UIViewRepresentable {
         case .pen:
             return PKInkingTool(.pen, color: getInkColor(), width: brushSize)
         case .pencil:
-            return PKInkingTool(.pencil, color: getInkColor(), width: brushSize)
+            return PKInkingTool(.marker, color: getInkColor(), width: brushSize)
         case .marker:
             return PKInkingTool(.marker, color: getInkColor(), width: brushSize)
         case .eraser:
