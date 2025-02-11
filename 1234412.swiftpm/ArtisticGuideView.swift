@@ -125,16 +125,16 @@ struct ArtisticGuideView: View {
             data: "71% of art therapy participants report improved emotional regulation"
         ),
         (
-            title: "Freedom of Expression",
-            description: "In art therapy, there are no rules or judgments. Your artistic expression is a unique reflection of your inner world and healing journey.",
-            prompt: "Let your emotions guide your hand - there's no right or wrong way to create.",
-            data: "Studies show 15-20 minutes of creative activity significantly reduces stress"
+            title: "AI Recognition",
+            description: "This app uses CoreML technology to recognize your drawings. For the best experience, please run on a real device as the simulator has limited AI capabilities.",
+            prompt: "Follow the prompts and let AI guide your creative journey.",
+            data: "CoreML requires a physical device for optimal performance"
         ),
         (
-            title: "Creating Hope",
-            description: "As you create, you're not just making art - you're building a bridge to hope and healing. This is your story, told through colors and shapes.",
-            prompt: "Add elements that represent hope and strength in your journey.",
-            data: "89% of patients report improved mood after art therapy sessions"
+            title: "Creative Challenge",
+            description: "Each step will present you with a theme. Try to draw what you think matches the prompt - the AI will help guide you to create the perfect element for your healing planet.",
+            prompt: "Let your imagination flow and see if you can guess what to draw!",
+            data: "Your drawings will combine to create a unique artistic planet"
         )
     ]
     

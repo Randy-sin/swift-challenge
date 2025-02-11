@@ -92,15 +92,26 @@ class CameraViewController: UIViewController {
             previewLayer.session = session
             previewLayer.videoGravity = .resizeAspectFill
             
-            // 调整预览层大小
+            // 调整预览层大小和方向
             let bounds = view.bounds
             let previewFrame = CGRect(x: 0, y: 0, width: bounds.width, height: bounds.height)
             previewLayer.frame = previewFrame
             
+            // 设置预览层的方向
+            if let connection = previewLayer.connection {
+                if connection.isVideoOrientationSupported {
+                    connection.videoOrientation = .landscapeRight
+                }
+            }
+            
             view.layer.addSublayer(previewLayer)
             
-            // 设置初始方向
-            handleDeviceOrientationChange()
+            // 设置视频输出的方向
+            if let videoConnection = videoOutput.connection(with: .video) {
+                if videoConnection.isVideoOrientationSupported {
+                    videoConnection.videoOrientation = .landscapeRight
+                }
+            }
 
             // 开始捕获会话
             session.startRunning()

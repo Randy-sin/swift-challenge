@@ -17,6 +17,7 @@ final class ArtisticPlanetViewModel: ObservableObject {
     @Published var showFullScreenPreview = false
     @Published var drawingValidationMessage: String = ""
     @Published var isDrawingValid: Bool = false
+    @Published var showValidationDialog: Bool = false
     @Published var showDrawingFeedback: Bool = false
     @Published var debugImage: UIImage? = nil  // 添加调试图像属性
     
@@ -108,7 +109,14 @@ final class ArtisticPlanetViewModel: ObservableObject {
     private func initializeModel() async {
         do {
             let config = MLModelConfiguration()
+            // 在模拟器上使用 CPU，在真机上使用全部计算单元
+            #if targetEnvironment(simulator)
+            config.computeUnits = .cpuOnly
+            print("🖥 Running in simulator - using CPU only")
+            #else
             config.computeUnits = .all
+            print("📱 Running on device - using all compute units")
+            #endif
             
             guard let modelURL = Bundle.main.url(forResource: "ML/SketchClassifier 1", withExtension: "mlmodel") else {
                 print("❌ Failed to find SketchClassifier model")
@@ -180,49 +188,15 @@ final class ArtisticPlanetViewModel: ObservableObject {
         // Check if there's actual drawing content
         if currentDrawing.strokes.isEmpty {
             print("⚠️ No strokes in current drawing")
-            let message: String
-            switch step {
-            case 1:
-                message = "The canvas is empty. Would you like to draw a beautiful flower?"
-            case 2:
-                message = "The canvas is empty. Let's draw a vibrant tree reaching for the sky!"
-            case 3:
-                message = "Nothing drawn yet. How about creating a flowing river?"
-            case 4:
-                message = "The sky is empty. Would you like to add some shining stars?"
-            default:
-                message = "Looks like you haven't drawn anything yet"
-            }
+            let message = "Drawing test successful! Please click **[Validate]** again to continue."
             self.drawingValidationMessage = message
             self.isDrawingValid = false
-            self.showDrawingFeedback = true
+            self.showValidationDialog = true
             return
         }
         
         guard let drawingImage = renderDrawingToImage() else {
             print("❌ Failed to render drawing")
-            return
-        }
-        
-        // Check if the image contains actual content
-        if !hasContent(in: drawingImage) {
-            print("⚠️ Drawing appears to be empty or too small")
-            let message: String
-            switch step {
-            case 1:
-                message = "The flower is a bit small. Try drawing it bigger!"
-            case 2:
-                message = "The tree needs to grow taller. Make it bigger!"
-            case 3:
-                message = "The river seems too narrow. Make it flow wider!"
-            case 4:
-                message = "The stars are tiny. Make them shine brighter and bigger!"
-            default:
-                message = "The drawing is too small. Try making it bigger!"
-            }
-            self.drawingValidationMessage = message
-            self.isDrawingValid = false
-            self.showDrawingFeedback = true
             return
         }
         
@@ -238,10 +212,10 @@ final class ArtisticPlanetViewModel: ObservableObject {
             return
         }
 
+        // 创建请求处理器时不使用额外的选项
         let handler = VNImageRequestHandler(
             cgImage: cgImage,
-            orientation: .up,
-            options: [VNImageOption.ciContext: CIContext()]
+            orientation: .up
         )
 
         Task { @MainActor [weak self] in
@@ -280,6 +254,8 @@ final class ArtisticPlanetViewModel: ObservableObject {
                                 successMessage = "Great job! That looks wonderful!"
                             }
                             self.drawingValidationMessage = successMessage
+                            self.isDrawingValid = isValid
+                            self.showValidationDialog = true
                         } else {
                             let failureMessage: String
                             switch step {
@@ -295,53 +271,83 @@ final class ArtisticPlanetViewModel: ObservableObject {
                                 failureMessage = "Try again, you can do it!"
                             }
                             self.drawingValidationMessage = failureMessage
+                            self.isDrawingValid = isValid
+                            self.showValidationDialog = true
                         }
-                        
-                        self.isDrawingValid = isValid
-                        self.showDrawingFeedback = true
                     }
                 }
             } catch {
                 print("❌ Classification error: \(error.localizedDescription)")
-                self.drawingValidationMessage = "Sorry, there was an error during validation. Please try again."
+                #if targetEnvironment(simulator)
+                self.drawingValidationMessage = "CoreML context cannot be created in simulator.\nPlease tap 'Skip' to continue or run on a real device."
+                #else
+                self.drawingValidationMessage = "Sorry, an error occurred during validation. Please try again."
+                #endif
                 self.isDrawingValid = false
-                self.showDrawingFeedback = true
+                self.showValidationDialog = true
             }
         }
+    }
+    
+    // 获取当前窗口的辅助方法
+    private func getCurrentWindow() -> UIWindow? {
+        // 获取当前活跃的场景
+        guard let windowScene = UIApplication.shared.connectedScenes
+            .first(where: { $0.activationState == .foregroundActive }) as? UIWindowScene,
+              let window = windowScene.windows.first(where: { $0.isKeyWindow }) else {
+            return nil
+        }
+        return window
     }
     
     // Render PKDrawing to UIImage
     private func renderDrawingToImage() -> UIImage? {
         // 获取当前窗口
-        guard let windowScene = UIApplication.shared.connectedScenes.first as? UIWindowScene,
-              let window = windowScene.windows.first(where: { $0.isKeyWindow }) else {
-            print("⚠️ Cannot find key window")
+        guard let window = getCurrentWindow() else {
+            print("⚠️ No window found")
             return nil
         }
         
-        // 创建一个和窗口一样大的上下文
+        // 创建一个与屏幕大小相同的上下文
         let format = UIGraphicsImageRendererFormat()
-        format.scale = 1.0  // 使用1.0的比例以获得实际像素大小
+        format.scale = 1.0
+        format.opaque = true
         
         let renderer = UIGraphicsImageRenderer(bounds: window.bounds, format: format)
-        let image = renderer.image { ctx in
-            // 截取整个窗口内容
+        let screenshot = renderer.image { context in
+            // 渲染整个窗口
             window.drawHierarchy(in: window.bounds, afterScreenUpdates: true)
         }
         
+        // 调整为模型所需的尺寸 (224x224)
+        let targetSize = CGSize(width: 224, height: 224)
+        let format2 = UIGraphicsImageRendererFormat()
+        format2.scale = 1.0
+        format2.opaque = true
+        
+        let finalImage = UIGraphicsImageRenderer(size: targetSize, format: format2).image { context in
+            context.cgContext.setFillColor(UIColor.white.cgColor)
+            context.cgContext.fill(CGRect(origin: .zero, size: targetSize))
+            
+            // 使用高质量的缩放
+            context.cgContext.interpolationQuality = .high
+            screenshot.draw(in: CGRect(origin: .zero, size: targetSize))
+        }
+        
         // 保存调试图像
-        if let data = image.pngData() {
+        if let data = finalImage.pngData() {
             do {
                 let documentsPath = FileManager.default.urls(for: .documentDirectory, in: .userDomainMask)[0]
                 let debugImagePath = documentsPath.appendingPathComponent("debug_drawing_\(Date().timeIntervalSince1970).png")
                 try data.write(to: debugImagePath)
                 print("🔍 Debug image saved to: \(debugImagePath.path)")
+                print("📏 Final image size: \(finalImage.size.width)x\(finalImage.size.height)")
             } catch {
                 print("❌ Failed to save debug image: \(error.localizedDescription)")
             }
         }
         
-        return image
+        return finalImage
     }
     
     private func setupPlanet() {
@@ -408,10 +414,18 @@ final class ArtisticPlanetViewModel: ObservableObject {
     
     // 处理单步绘画
     private func processDrawing(_ drawing: PKDrawing, step: Int) async -> UIImage? {
-        // 创建绘画图像
-        let renderer = UIGraphicsImageRenderer(size: baseTextureSize)
-        let drawingImage = drawing.image(from: drawing.bounds, scale: 1.0)
+        // 创建一个与基础纹理大小相同的上下文
+        let format = UIGraphicsImageRendererFormat()
+        format.scale = 1.0
+        format.opaque = false  // 设置为透明背景
         
+        // 首先将绘画渲染到临时图像
+        let drawingImage = UIGraphicsImageRenderer(bounds: drawing.bounds, format: format).image { context in
+            drawing.image(from: drawing.bounds, scale: 1.0).draw(in: drawing.bounds)
+        }
+        
+        // 创建最终纹理
+        let renderer = UIGraphicsImageRenderer(size: baseTextureSize)
         return renderer.image { context in
             // 设置基础背景为透明
             context.cgContext.clear(CGRect(origin: .zero, size: baseTextureSize))
@@ -424,14 +438,19 @@ final class ArtisticPlanetViewModel: ObservableObject {
             
             // 在不同位置重复绘制元素
             for scale in scales {
+                // 计算缩放后的尺寸，并确保不超过基础纹理的尺寸
+                let scaledWidth = min(drawingImage.size.width * scale, baseTextureSize.width)
+                let scaledHeight = min(drawingImage.size.height * scale, baseTextureSize.height)
+                
+                // 确保有足够的空间进行随机定位
+                let maxX = max(0, baseTextureSize.width - scaledWidth)
+                let maxY = max(0, baseTextureSize.height - scaledHeight)
+                
                 for rotation in rotations {
                     for alpha in alphas {
-                        let scaledWidth = drawingImage.size.width * scale
-                        let scaledHeight = drawingImage.size.height * scale
-                        
-                        // 随机位置，但确保覆盖整个纹理
-                        let x = CGFloat.random(in: 0...(baseTextureSize.width - scaledWidth))
-                        let y = CGFloat.random(in: 0...(baseTextureSize.height - scaledHeight))
+                        // 使用安全的随机范围
+                        let x = CGFloat.random(in: 0...maxX)
+                        let y = CGFloat.random(in: 0...maxY)
                         
                         // 保存当前绘图状态
                         context.cgContext.saveGState()
@@ -445,8 +464,10 @@ final class ArtisticPlanetViewModel: ObservableObject {
                         context.cgContext.rotate(by: rotation * .pi / 180)
                         context.cgContext.translateBy(x: -scaledWidth/2, y: -scaledHeight/2)
                         
+                        // 设置绘制颜色
+                        context.cgContext.setFillColor(stepColor.cgColor)
+                        
                         // 绘制图像
-                        stepColor.setFill()
                         drawingImage.draw(in: CGRect(x: 0, y: 0, width: scaledWidth, height: scaledHeight))
                         
                         // 恢复绘图状态
@@ -662,11 +683,27 @@ final class ArtisticPlanetViewModel: ObservableObject {
         print("❌ Validation error: \(message)")
         self.drawingValidationMessage = "An error occurred: \(message)"
         self.isDrawingValid = false
-        self.showDrawingFeedback = true
+        self.showValidationDialog = true
     }
     
     // 获取当前绘画的调试图像
     func getDebugImage() -> UIImage? {
         return renderDrawingToImage()
+    }
+    
+    // 添加处理验证结果的方法
+    func handleValidationContinue() {
+        if isDrawingValid {
+            saveDrawing(currentDrawing, forStep: currentStep)
+            if currentStep < 4 {
+                currentStep += 1
+                currentDrawing = PKDrawing()  // 清空当前绘画
+            }
+        }
+        showValidationDialog = false
+    }
+    
+    func handleValidationDismiss() {
+        showValidationDialog = false
     }
 } 

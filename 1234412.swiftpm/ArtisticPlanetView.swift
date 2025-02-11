@@ -15,6 +15,7 @@ struct ArtisticPlanetView: View {
     @State private var showCompletionDialog = false
     @State private var showArtisticCompletion = false
     @State private var showDebugImage = false
+    @State private var showTip = false
     
     let steps = [
         (title: "Blooming Hope", description: "Paint a flower with warm colors to represent hope", color: DrawingColor.red.color, example: "flower_example"),
@@ -154,11 +155,35 @@ struct ArtisticPlanetView: View {
                                 .font(.system(size: 28, weight: .bold, design: .rounded))
                                 .foregroundColor(steps[currentStep - 1].color)
                             
-                            Text(steps[currentStep - 1].description)
-                                .font(.system(size: 17, weight: .regular, design: .rounded))
+                            Button(action: {
+                                withAnimation(.spring(response: 0.3, dampingFraction: 0.7)) {
+                                    showTip.toggle()
+                                }
+                            }) {
+                                HStack {
+                                    Image(systemName: showTip ? "lightbulb.slash.fill" : "lightbulb.fill")
+                                        .font(.system(size: 15))
+                                    Text(showTip ? "Hide Tip" : "Need a Tip?")
+                                        .font(.system(size: 15, weight: .medium))
+                                }
                                 .foregroundColor(.white.opacity(0.9))
-                                .multilineTextAlignment(.center)
-                                .padding(.horizontal, 40)
+                                .padding(.horizontal, 16)
+                                .padding(.vertical, 8)
+                                .background(
+                                    Capsule()
+                                        .fill(.ultraThinMaterial)
+                                )
+                            }
+                            
+                            if showTip {
+                                Text(steps[currentStep - 1].description)
+                                    .font(.system(size: 17, weight: .regular, design: .rounded))
+                                    .foregroundColor(.white.opacity(0.9))
+                                    .multilineTextAlignment(.center)
+                                    .padding(.horizontal, 40)
+                                    .padding(.top, 8)
+                                    .transition(.opacity.combined(with: .move(edge: .top)))
+                            }
                             
                             // 添加示例图片
                             if let exampleImage = UIImage(named: steps[currentStep - 1].example) {
@@ -216,7 +241,7 @@ struct ArtisticPlanetView: View {
                                 .shadow(color: .black.opacity(0.2), radius: 20)
                             
                             // Canvas
-                            DrawingCanvasView(
+                            DrawingCanvas(
                                 canvasView: $canvasView,
                                 tool: selectedTool,
                                 color: selectedColor,
@@ -286,21 +311,173 @@ struct ArtisticPlanetView: View {
             } message: {
                 Text("Do you want to undo your last drawing?")
             }
-            .alert(viewModel.drawingValidationMessage, isPresented: $viewModel.showDrawingFeedback) {
-                if viewModel.isDrawingValid {
-                    Button("Continue") {
-                        withAnimation {
-                            viewModel.saveDrawing(canvasView.drawing, forStep: currentStep)
-                            if currentStep < steps.count {
-                                currentStep += 1
-                                selectedColor = getStepColor(step: currentStep)
-                                canvasView.drawing = PKDrawing()
-                                viewModel.currentStep = currentStep
+            .overlay {
+                if viewModel.showValidationDialog {
+                    // 自定义验证对话框
+                    ZStack {
+                        // 背景遮罩
+                        Color.black
+                            .opacity(0.4)
+                            .edgesIgnoringSafeArea(.all)
+                            .onTapGesture {
+                                withAnimation(.spring(response: 0.3, dampingFraction: 0.8)) {
+                                    viewModel.handleValidationDismiss()
+                                }
+                            }
+                            .transition(.opacity)
+                        
+                        // 对话框
+                        VStack(spacing: 24) {
+                            // 标题和消息
+                            if viewModel.drawingValidationMessage.contains("**[Validate]**") {
+                                // 特殊处理带格式的消息
+                                let parts = viewModel.drawingValidationMessage.components(separatedBy: "**[Validate]**")
+                                HStack(spacing: 0) {
+                                    Text(parts[0])
+                                        .font(.system(size: 20, weight: .medium, design: .rounded))
+                                        .foregroundColor(.white)
+                                    Text("Validate")
+                                        .font(.system(size: 20, weight: .bold, design: .rounded))
+                                        .foregroundColor(.blue)
+                                    Text(parts[1])
+                                        .font(.system(size: 20, weight: .medium, design: .rounded))
+                                        .foregroundColor(.white)
+                                }
+                                .multilineTextAlignment(.center)
+                                .fixedSize(horizontal: false, vertical: true)
+                                .padding(.horizontal, 20)
+                            } else {
+                                Text(viewModel.drawingValidationMessage)
+                                    .font(.system(size: 20, weight: .medium, design: .rounded))
+                                    .foregroundColor(.white)
+                                    .multilineTextAlignment(.center)
+                                    .fixedSize(horizontal: false, vertical: true)
+                                    .padding(.horizontal, 20)
+                            }
+                            
+                            // 按钮
+                            HStack(spacing: 16) {
+                                // Try Again 按钮
+                                Button(action: {
+                                    withAnimation(.spring(response: 0.3, dampingFraction: 0.8)) {
+                                        viewModel.handleValidationDismiss()
+                                    }
+                                }) {
+                                    Text("Try Again")
+                                        .font(.system(size: 17, weight: .semibold, design: .rounded))
+                                        .foregroundColor(.white)
+                                        .frame(width: 120, height: 44)
+                                        .background(
+                                            Capsule()
+                                                .fill(.ultraThinMaterial)
+                                        )
+                                }
+                                .transition(.scale.combined(with: .opacity))
+                                
+                                #if targetEnvironment(simulator)
+                                // Skip 按钮（在模拟器中显示，但在空绘画提示时不显示）
+                                if !viewModel.drawingValidationMessage.contains("Drawing test successful") {
+                                    Button(action: {
+                                        // 保存当前绘画
+                                        viewModel.saveDrawing(canvasView.drawing, forStep: currentStep)
+                                        // 更新UI
+                                        withAnimation(.spring(response: 0.3, dampingFraction: 0.8)) {
+                                            currentStep += 1
+                                            selectedColor = getStepColor(step: currentStep)
+                                            canvasView.drawing = PKDrawing()  // 清空画板
+                                            viewModel.handleValidationDismiss()
+                                        }
+                                    }) {
+                                        Text("Skip")
+                                            .font(.system(size: 17, weight: .semibold, design: .rounded))
+                                            .foregroundColor(.white)
+                                            .frame(width: 120, height: 44)
+                                            .background(
+                                                Capsule()
+                                                    .fill(Color.blue)
+                                            )
+                                    }
+                                    .transition(.scale.combined(with: .opacity))
+                                }
+                                #else
+                                if viewModel.isDrawingValid {
+                                    // Continue 按钮
+                                    Button(action: {
+                                        withAnimation(.spring(response: 0.3, dampingFraction: 0.8)) {
+                                            viewModel.handleValidationContinue()
+                                            if viewModel.isDrawingValid {
+                                                currentStep += 1
+                                                selectedColor = getStepColor(step: currentStep)
+                                                canvasView.drawing = PKDrawing()  // 清空画板
+                                            }
+                                        }
+                                    }) {
+                                        Text("Continue")
+                                            .font(.system(size: 17, weight: .semibold, design: .rounded))
+                                            .foregroundColor(.black)
+                                            .frame(width: 120, height: 44)
+                                            .background(
+                                                Capsule()
+                                                    .fill(Color.white)
+                                            )
+                                    }
+                                    .transition(.scale.combined(with: .opacity))
+                                } else if !viewModel.drawingValidationMessage.contains("Drawing test successful") {
+                                    // Skip 按钮（验证失败时显示，但在空绘画提示时不显示）
+                                    Button(action: {
+                                        // 保存当前绘画
+                                        viewModel.saveDrawing(canvasView.drawing, forStep: currentStep)
+                                        // 更新UI
+                                        withAnimation(.spring(response: 0.3, dampingFraction: 0.8)) {
+                                            currentStep += 1
+                                            selectedColor = getStepColor(step: currentStep)
+                                            canvasView.drawing = PKDrawing()  // 清空画板
+                                            viewModel.handleValidationDismiss()
+                                        }
+                                    }) {
+                                        Text("Skip")
+                                            .font(.system(size: 17, weight: .semibold, design: .rounded))
+                                            .foregroundColor(.white)
+                                            .frame(width: 120, height: 44)
+                                            .background(
+                                                Capsule()
+                                                    .fill(Color.blue)
+                                            )
+                                    }
+                                    .transition(.scale.combined(with: .opacity))
+                                }
+                                #endif
                             }
                         }
+                        .padding(32)
+                        .background(
+                            RoundedRectangle(cornerRadius: 24)
+                                .fill(Color(red: 0.1, green: 0.1, blue: 0.2))
+                                .background(.ultraThinMaterial)
+                                .clipShape(RoundedRectangle(cornerRadius: 24))
+                        )
+                        .overlay(
+                            RoundedRectangle(cornerRadius: 24)
+                                .stroke(Color.white.opacity(0.2), lineWidth: 1)
+                        )
+                        .padding(40)
+                        .scaleEffect(viewModel.showValidationDialog ? 1 : 0.7)
+                        .opacity(viewModel.showValidationDialog ? 1 : 0)
+                        .blur(radius: viewModel.showValidationDialog ? 0 : 10)
+                        .transition(.asymmetric(
+                            insertion: .scale.combined(with: .opacity).animation(.spring(response: 0.4, dampingFraction: 0.8)),
+                            removal: .scale.combined(with: .opacity).animation(.easeOut(duration: 0.2))
+                        ))
+                    }
+                    .transition(.opacity.animation(.easeInOut(duration: 0.2)))
+                }
+            }
+            .onChange(of: viewModel.showValidationDialog) { newValue in
+                if newValue {
+                    withAnimation(.spring(response: 0.4, dampingFraction: 0.8)) {
+                        viewModel.showValidationDialog = true
                     }
                 }
-                Button("Try Again", role: .cancel) { }
             }
             .fullScreenCover(isPresented: $viewModel.showFullScreenPreview) {
                 ZStack {
@@ -475,7 +652,6 @@ struct ArtisticPlanetView: View {
     }
 }
 
-// 保持原有的 DrawingCanvas 和 CanvasView 结构体不变
 struct DrawingCanvas: View {
     @Binding var canvasView: PKCanvasView
     let tool: DrawingTool
