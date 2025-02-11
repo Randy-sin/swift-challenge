@@ -42,6 +42,7 @@ let package = Package(
             name: "AppModule",
             path: ".",
             resources: [
+                .copy("ML"),
                 .process("Assets.xcassets")
             ]
         )

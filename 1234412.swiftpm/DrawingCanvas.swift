@@ -65,7 +65,21 @@ struct DrawingCanvasView: UIViewRepresentable {
         }
         
         func canvasViewDrawingDidChange(_ canvasView: PKCanvasView) {
-            // Handle drawing changes if needed
+            // 只在绘画内容真正改变时才更新
+            if canvasView.drawing != parent.canvasView.drawing {
+                let strokes = canvasView.drawing.strokes.count
+                let bounds = canvasView.drawing.bounds
+                
+                // 只有在有实际内容时才打印和更新
+                if strokes > 0 && !bounds.isEmpty {
+                    print("✏️ Drawing changed, strokes count: \(strokes)")
+                    print("📐 Drawing bounds: \(bounds)")
+                    
+                    Task { @MainActor in
+                        parent.canvasView.drawing = canvasView.drawing
+                    }
+                }
+            }
         }
     }
 } 
