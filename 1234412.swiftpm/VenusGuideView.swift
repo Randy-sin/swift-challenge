@@ -69,9 +69,9 @@ struct VenusGuideStepView: View {
                     .fixedSize(horizontal: false, vertical: true)  // 确保文字完整显示
                     .lineSpacing(4)
             }
-            .padding(.trailing, 16)  // 添加右侧边距
         }
         .padding(20)  // 增加整体内边距
+        .frame(width: 480)  // 添加固定宽度
         .background(
             RoundedRectangle(cornerRadius: 16)
                 .fill(Color.white.opacity(0.08))
@@ -94,19 +94,23 @@ struct VenusGuideView: View {
     @State private var error: Error?
     
     let steps = [
-        (icon: "camera.fill", title: "Align with Venus", description: "Like Venus rising in the morning sky, position yourself to face the light", color: Color.yellow),
+        (icon: "camera.fill", title: "Align with Venus", description: "Like Venus rising in the morning sky, position yourself to face the light. For the best experience, please run on a real iPad device as the simulator cannot access camera.", color: Color.yellow),
         (icon: "mouth.fill", title: "Share Your Radiance", description: "Let your smile shine bright like Venus, the brightest star in our sky", color: Color(red: 1.0, green: 0.7, blue: 0.3)),
         (icon: "sun.max.fill", title: "Embrace the Warmth", description: "Feel the golden warmth of Venus fill your heart with joy", color: Color(red: 1.0, green: 0.5, blue: 0.2))
     ]
     
     public var body: some View {
         ZStack {
-            backgroundView
-            
-            if showContent {
-                EmotionParticleView()
-                    .opacity(0.6)
-            }
+            // Background
+            LinearGradient(
+                gradient: Gradient(colors: [
+                    Color(red: 0.05, green: 0.05, blue: 0.15),
+                    Color(red: 0.1, green: 0.1, blue: 0.25)
+                ]),
+                startPoint: .topLeading,
+                endPoint: .bottomTrailing
+            )
+            .edgesIgnoringSafeArea(.all)
             
             ScrollView {
                 GeometryReader { geometry in
@@ -130,6 +134,12 @@ struct VenusGuideView: View {
                     }
                 }
             }
+
+            // Particle effect with Venus color filter - 移到最顶层
+            EmotionParticleView()
+                .opacity(0.6)
+                .colorMultiply(Color(red: 1.0, green: 0.8, blue: 0.4))  // 添加金星特有的温暖色调
+                .allowsHitTesting(false)  // 确保不会影响下面视图的交互
         }
         .transition(.opacity)
         .onAppear {
@@ -149,18 +159,6 @@ struct VenusGuideView: View {
     }
     
     // MARK: - 私有视图组件
-    private var backgroundView: some View {
-        LinearGradient(
-            gradient: Gradient(colors: [
-                Color(red: 0.05, green: 0.05, blue: 0.15),
-                Color(red: 0.1, green: 0.1, blue: 0.25)
-            ]),
-            startPoint: .topLeading,
-            endPoint: .bottomTrailing
-        )
-        .edgesIgnoringSafeArea(.all)
-    }
-    
     private var titleSection: some View {
         VStack(alignment: .leading, spacing: 16) {
             Text("The Light of Venus")

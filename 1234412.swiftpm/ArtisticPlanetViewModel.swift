@@ -260,11 +260,11 @@ final class ArtisticPlanetViewModel: ObservableObject {
                             let failureMessage: String
                             switch step {
                             case 1:
-                                failureMessage = "This doesn't quite look like a flower. Would you like to check the example and try again?"
+                                failureMessage = "I see your creativity, but maybe we could add more elements that represent blooming and growth. Would you like to check out the tip?"
                             case 2:
-                                failureMessage = "This might not be a tree yet. Try drawing one that grows upward!"
+                                failureMessage = "I see your artistic spirit, but maybe we could make it look more tree-like with branches reaching up. Would you like to check out the tip?"
                             case 3:
-                                failureMessage = "This doesn't quite look like a river. Try drawing a winding stream!"
+                                failureMessage = "I see your flowing lines, but maybe we could make it more river-like with gentle curves. Would you like to check out the tip?"
                             case 4:
                                 failureMessage = "These don't quite look like stars. Try adding some bright points in the sky!"
                             default:

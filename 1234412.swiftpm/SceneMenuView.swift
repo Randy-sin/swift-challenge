@@ -11,9 +11,11 @@ struct SceneCard: View {
     let backgroundImage: String?
     
     var body: some View {
-        VStack(alignment: .leading, spacing: 12) {
+        VStack(alignment: .leading, spacing: 0) {  // 改为 spacing: 0
+            Spacer().frame(height: 25)  // 增加顶部间距
+            
             // 标题区域
-            VStack(alignment: .leading, spacing: 4) {
+            VStack(alignment: .leading, spacing: 12) {  // 增加间距
                 Text(title)
                     .font(.system(size: 28, weight: .bold, design: .rounded))
                     .foregroundColor(.white)
@@ -21,14 +23,13 @@ struct SceneCard: View {
                 Text(subtitle)
                     .font(.system(size: 18, weight: .regular, design: .rounded))
                     .foregroundColor(.white.opacity(0.7))
-                    .lineLimit(1)
                 
                 Text(description)
                     .font(.system(size: 16, weight: .regular, design: .rounded))
                     .foregroundColor(.white.opacity(0.6))
-                    .lineLimit(2)
                     .padding(.top, 4)
             }
+            .padding(.horizontal, 30)  // 添加水平内边距
             
             Spacer()
             
@@ -46,8 +47,9 @@ struct SceneCard: View {
                 
                 Spacer()
             }
+            .padding(.horizontal, 30)  // 添加水平内边距
+            .padding(.bottom, 25)  // 减少底部间距
         }
-        .padding(30)
         .frame(width: 400, height: 180)
         .background(
             ZStack {
@@ -57,7 +59,7 @@ struct SceneCard: View {
                         .aspectRatio(contentMode: .fill)
                         .frame(width: 400, height: 180)
                         .clipped()
-                        .opacity(0.4)
+                        .opacity(0.3)
                 }
                 
                 RoundedRectangle(cornerRadius: 28)
@@ -89,6 +91,7 @@ struct SceneMenuView: View {
     @State private var showVenusGuide = false
     @State private var showArtisticGuide = false
     @State private var showArtisticPlanet = false
+    @State private var showOceanusGuide = false
     @StateObject private var artisticViewModel = ArtisticPlanetViewModel()
     
     var body: some View {
@@ -129,8 +132,8 @@ struct SceneMenuView: View {
                             description: "Transform your emotions through the brightest smile in our solar system",
                             isLocked: false,
                             gradientColors: [
-                                Color(red: 1.0, green: 0.8, blue: 0.4).opacity(0.3),
-                                Color(red: 1.0, green: 0.6, blue: 0.2).opacity(0.2),
+                                Color(red: 1.0, green: 0.8, blue: 0.4).opacity(0.6),
+                                Color(red: 1.0, green: 0.6, blue: 0.2).opacity(0.4),
                                 Color.clear
                             ],
                             backgroundImage: "venusbg"
@@ -147,26 +150,31 @@ struct SceneMenuView: View {
                             description: "Create your own celestial world with colors of feelings",
                             isLocked: false,
                             gradientColors: [
-                                Color(red: 0.4, green: 0.8, blue: 1.0).opacity(0.3),
-                                Color(red: 0.2, green: 0.6, blue: 0.8).opacity(0.2),
+                                Color(red: 0.4, green: 0.8, blue: 1.0).opacity(0.6),
+                                Color(red: 0.2, green: 0.6, blue: 0.8).opacity(0.4),
                                 Color.clear
                             ],
                             backgroundImage: "artisticplanet"
                         )
                     }
                     
-                    // 第三个场景（待解锁）
-                    SceneCard(
-                        title: "Coming Soon",
-                        subtitle: "Your next journey awaits",
-                        description: "Complete previous journey to unlock",
-                        isLocked: true,
-                        gradientColors: [
-                            .white.opacity(0.2),
-                            .clear
-                        ],
-                        backgroundImage: nil
-                    )
+                    // 第三个场景：Oceanus
+                    Button {
+                        showOceanusGuide = true
+                    } label: {
+                        SceneCard(
+                            title: "Oceanus",
+                            subtitle: "Breathe with the Ocean",
+                            description: "Discover inner peace through the rhythm of the waves",
+                            isLocked: false,
+                            gradientColors: [
+                                Color(red: 0.2, green: 0.6, blue: 0.9).opacity(0.6),
+                                Color(red: 0.1, green: 0.4, blue: 0.8).opacity(0.4),
+                                Color.clear
+                            ],
+                            backgroundImage: "oceanusbg"
+                        )
+                    }
                     
                     // 第四个场景（待解锁）
                     SceneCard(
@@ -175,8 +183,9 @@ struct SceneMenuView: View {
                         description: "Complete previous journey to unlock",
                         isLocked: true,
                         gradientColors: [
-                            .white.opacity(0.2),
-                            .clear
+                            Color.white.opacity(0.4),
+                            Color.white.opacity(0.2),
+                            Color.clear
                         ],
                         backgroundImage: nil
                     )
@@ -210,6 +219,11 @@ struct SceneMenuView: View {
         .fullScreenCover(isPresented: $showArtisticPlanet) {
             ArtisticPlanetView()
                 .environmentObject(artisticViewModel)
+        }
+        .fullScreenCover(isPresented: $showOceanusGuide) {
+            OceanusGuideView(isShowingGuide: $showOceanusGuide, startBreathing: {
+                showOceanusGuide = false
+            })
         }
     }
 }

@@ -80,19 +80,19 @@ struct ArtisticPlanetView: View {
                                 
                                 if currentStep < steps.count {
                                     HStack(spacing: 12) {
-                                        Button(action: {
+                                    Button(action: {
                                             viewModel.validateCurrentDrawing(forStep: currentStep)
-                                        }) {
-                                            HStack(spacing: 8) {
-                                                Text("Validate")
-                                                Image(systemName: "checkmark.circle")
-                                            }
-                                            .font(.system(size: 15, weight: .medium))
-                                            .foregroundColor(.white)
-                                            .padding(.horizontal, 16)
-                                            .padding(.vertical, 8)
-                                            .background(.ultraThinMaterial)
-                                            .cornerRadius(16)
+                                    }) {
+                                        HStack(spacing: 8) {
+                                            Text("Validate")
+                                            Image(systemName: "checkmark.circle")
+                                        }
+                                        .font(.system(size: 15, weight: .medium))
+                                        .foregroundColor(.white)
+                                        .padding(.horizontal, 16)
+                                        .padding(.vertical, 8)
+                                        .background(.ultraThinMaterial)
+                                        .cornerRadius(16)
                                         }
                                         
                                         Button(action: {
@@ -176,11 +176,11 @@ struct ArtisticPlanetView: View {
                             }
                             
                             if showTip {
-                                Text(steps[currentStep - 1].description)
-                                    .font(.system(size: 17, weight: .regular, design: .rounded))
-                                    .foregroundColor(.white.opacity(0.9))
-                                    .multilineTextAlignment(.center)
-                                    .padding(.horizontal, 40)
+                            Text(steps[currentStep - 1].description)
+                                .font(.system(size: 17, weight: .regular, design: .rounded))
+                                .foregroundColor(.white.opacity(0.9))
+                                .multilineTextAlignment(.center)
+                                .padding(.horizontal, 40)
                                     .padding(.top, 8)
                                     .transition(.opacity.combined(with: .move(edge: .top)))
                             }
@@ -328,34 +328,70 @@ struct ArtisticPlanetView: View {
                         
                         // 对话框
                         VStack(spacing: 24) {
-                            // 标题和消息
-                            if viewModel.drawingValidationMessage.contains("**[Validate]**") {
-                                // 特殊处理带格式的消息
-                                let parts = viewModel.drawingValidationMessage.components(separatedBy: "**[Validate]**")
-                                HStack(spacing: 0) {
-                                    Text(parts[0])
-                                        .font(.system(size: 20, weight: .medium, design: .rounded))
-                                        .foregroundColor(.white)
-                                    Text("Validate")
-                                        .font(.system(size: 20, weight: .bold, design: .rounded))
-                                        .foregroundColor(.blue)
-                                    Text(parts[1])
-                                        .font(.system(size: 20, weight: .medium, design: .rounded))
-                                        .foregroundColor(.white)
+                            // 图标和消息
+                            VStack(spacing: 20) {
+                                // 动态图标
+                                ZStack {
+                                    Circle()
+                                        .fill(viewModel.isDrawingValid ? Color.green.opacity(0.1) : Color.blue.opacity(0.1))
+                                        .frame(width: 80, height: 80)
+                                    
+                                    Circle()
+                                        .stroke(
+                                            viewModel.isDrawingValid ? Color.green : Color.blue,
+                                            lineWidth: 2
+                                        )
+                                        .frame(width: 80, height: 80)
+                                    
+                                    Image(systemName: viewModel.isDrawingValid ? "checkmark" : "lightbulb.fill")
+                                        .font(.system(size: 30, weight: .medium))
+                                        .foregroundColor(viewModel.isDrawingValid ? Color.green : Color.blue)
+                                        .symbolEffect(.bounce, options: .repeating)
                                 }
-                                .multilineTextAlignment(.center)
-                                .fixedSize(horizontal: false, vertical: true)
-                                .padding(.horizontal, 20)
-                            } else {
-                                Text(viewModel.drawingValidationMessage)
-                                    .font(.system(size: 20, weight: .medium, design: .rounded))
-                                    .foregroundColor(.white)
+                                .overlay(
+                                    Circle()
+                                        .stroke(
+                                            LinearGradient(
+                                                colors: [
+                                                    (viewModel.isDrawingValid ? Color.green : Color.blue).opacity(0.5),
+                                                    (viewModel.isDrawingValid ? Color.green : Color.blue).opacity(0.2)
+                                                ],
+                                                startPoint: .topLeading,
+                                                endPoint: .bottomTrailing
+                                            ),
+                                            lineWidth: 1
+                                        )
+                                        .frame(width: 100, height: 100)
+                                )
+                                
+                                if viewModel.drawingValidationMessage.contains("**[Validate]**") {
+                                    // 特殊处理带格式的消息
+                                    let parts = viewModel.drawingValidationMessage.components(separatedBy: "**[Validate]**")
+                                    HStack(spacing: 0) {
+                                        Text(parts[0])
+                                            .font(.system(size: 20, weight: .medium, design: .rounded))
+                                            .foregroundColor(.white)
+                                        Text("Validate")
+                                            .font(.system(size: 20, weight: .bold, design: .rounded))
+                                            .foregroundColor(.blue)
+                                        Text(parts[1])
+                                            .font(.system(size: 20, weight: .medium, design: .rounded))
+                                            .foregroundColor(.white)
+                                    }
                                     .multilineTextAlignment(.center)
                                     .fixedSize(horizontal: false, vertical: true)
                                     .padding(.horizontal, 20)
+                                } else {
+                                    Text(viewModel.drawingValidationMessage)
+                                        .font(.system(size: 20, weight: .medium, design: .rounded))
+                                        .foregroundColor(.white)
+                                        .multilineTextAlignment(.center)
+                                        .fixedSize(horizontal: false, vertical: true)
+                                        .padding(.horizontal, 20)
+                                }
                             }
                             
-                            // 按钮
+                            // 按钮区域
                             HStack(spacing: 16) {
                                 // Try Again 按钮
                                 Button(action: {
@@ -368,10 +404,16 @@ struct ArtisticPlanetView: View {
                                         .foregroundColor(.white)
                                         .frame(width: 120, height: 44)
                                         .background(
-                                            Capsule()
-                                                .fill(.ultraThinMaterial)
+                                            ZStack {
+                                                Capsule()
+                                                    .fill(.ultraThinMaterial)
+                                                
+                                                Capsule()
+                                                    .stroke(Color.white.opacity(0.3), lineWidth: 1)
+                                            }
                                         )
                                 }
+                                .buttonStyle(ScaleButtonStyle())
                                 .transition(.scale.combined(with: .opacity))
                                 
                                 #if targetEnvironment(simulator)
@@ -393,10 +435,16 @@ struct ArtisticPlanetView: View {
                                             .foregroundColor(.white)
                                             .frame(width: 120, height: 44)
                                             .background(
-                                                Capsule()
-                                                    .fill(Color.blue)
+                                                ZStack {
+                                                    Capsule()
+                                                        .fill(Color.blue)
+                                                    
+                                                    Capsule()
+                                                        .stroke(Color.blue.opacity(0.3), lineWidth: 1)
+                                                }
                                             )
                                     }
+                                    .buttonStyle(ScaleButtonStyle())
                                     .transition(.scale.combined(with: .opacity))
                                 }
                                 #else
@@ -405,7 +453,7 @@ struct ArtisticPlanetView: View {
                                     Button(action: {
                                         withAnimation(.spring(response: 0.3, dampingFraction: 0.8)) {
                                             viewModel.handleValidationContinue()
-                                            if viewModel.isDrawingValid {
+                if viewModel.isDrawingValid {
                                                 currentStep += 1
                                                 selectedColor = getStepColor(step: currentStep)
                                                 canvasView.drawing = PKDrawing()  // 清空画板
@@ -417,20 +465,26 @@ struct ArtisticPlanetView: View {
                                             .foregroundColor(.black)
                                             .frame(width: 120, height: 44)
                                             .background(
-                                                Capsule()
-                                                    .fill(Color.white)
+                                                ZStack {
+                                                    Capsule()
+                                                        .fill(Color.white)
+                                                    
+                                                    Capsule()
+                                                        .stroke(Color.white.opacity(0.3), lineWidth: 1)
+                                                }
                                             )
                                     }
+                                    .buttonStyle(ScaleButtonStyle())
                                     .transition(.scale.combined(with: .opacity))
                                 } else if !viewModel.drawingValidationMessage.contains("Drawing test successful") {
                                     // Skip 按钮（验证失败时显示，但在空绘画提示时不显示）
                                     Button(action: {
                                         // 保存当前绘画
-                                        viewModel.saveDrawing(canvasView.drawing, forStep: currentStep)
+                            viewModel.saveDrawing(canvasView.drawing, forStep: currentStep)
                                         // 更新UI
                                         withAnimation(.spring(response: 0.3, dampingFraction: 0.8)) {
-                                            currentStep += 1
-                                            selectedColor = getStepColor(step: currentStep)
+                            currentStep += 1
+                            selectedColor = getStepColor(step: currentStep)
                                             canvasView.drawing = PKDrawing()  // 清空画板
                                             viewModel.handleValidationDismiss()
                                         }
@@ -440,10 +494,16 @@ struct ArtisticPlanetView: View {
                                             .foregroundColor(.white)
                                             .frame(width: 120, height: 44)
                                             .background(
-                                                Capsule()
-                                                    .fill(Color.blue)
+                                                ZStack {
+                                                    Capsule()
+                                                        .fill(Color.blue)
+                                                    
+                                                    Capsule()
+                                                        .stroke(Color.blue.opacity(0.3), lineWidth: 1)
+                                                }
                                             )
                                     }
+                                    .buttonStyle(ScaleButtonStyle())
                                     .transition(.scale.combined(with: .opacity))
                                 }
                                 #endif
@@ -451,13 +511,33 @@ struct ArtisticPlanetView: View {
                         }
                         .padding(32)
                         .background(
-                            RoundedRectangle(cornerRadius: 24)
-                                .fill(Color(red: 0.1, green: 0.1, blue: 0.2))
-                                .background(.ultraThinMaterial)
-                                .clipShape(RoundedRectangle(cornerRadius: 24))
+                            ZStack {
+                                // 模糊背景
+                                RoundedRectangle(cornerRadius: 28)
+                                    .fill(Color(red: 0.1, green: 0.1, blue: 0.2))
+                                    .opacity(0.95)
+                                
+                                // 玻璃效果
+                                RoundedRectangle(cornerRadius: 28)
+                                    .fill(.ultraThinMaterial)
+                                
+                                // 渐变边框
+                                RoundedRectangle(cornerRadius: 28)
+                                    .stroke(
+                                        LinearGradient(
+                                            colors: [
+                                                Color.white.opacity(0.3),
+                                                Color.white.opacity(0.1)
+                                            ],
+                                            startPoint: .topLeading,
+                                            endPoint: .bottomTrailing
+                                        ),
+                                        lineWidth: 1
+                                    )
+                            }
                         )
                         .overlay(
-                            RoundedRectangle(cornerRadius: 24)
+                            RoundedRectangle(cornerRadius: 28)
                                 .stroke(Color.white.opacity(0.2), lineWidth: 1)
                         )
                         .padding(40)
@@ -465,8 +545,8 @@ struct ArtisticPlanetView: View {
                         .opacity(viewModel.showValidationDialog ? 1 : 0)
                         .blur(radius: viewModel.showValidationDialog ? 0 : 10)
                         .transition(.asymmetric(
-                            insertion: .scale.combined(with: .opacity).animation(.spring(response: 0.4, dampingFraction: 0.8)),
-                            removal: .scale.combined(with: .opacity).animation(.easeOut(duration: 0.2))
+                            insertion: .scale(scale: 0.9).combined(with: .opacity).animation(.spring(response: 0.4, dampingFraction: 0.8)),
+                            removal: .scale(scale: 0.9).combined(with: .opacity).animation(.easeOut(duration: 0.2))
                         ))
                     }
                     .transition(.opacity.animation(.easeInOut(duration: 0.2)))
