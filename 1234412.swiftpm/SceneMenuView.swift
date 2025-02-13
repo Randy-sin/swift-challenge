@@ -92,6 +92,7 @@ struct SceneMenuView: View {
     @State private var showArtisticGuide = false
     @State private var showArtisticPlanet = false
     @State private var showOceanusGuide = false
+    @State private var showOceanusAR = false
     @StateObject private var artisticViewModel = ArtisticPlanetViewModel()
     
     var body: some View {
@@ -223,7 +224,11 @@ struct SceneMenuView: View {
         .fullScreenCover(isPresented: $showOceanusGuide) {
             OceanusGuideView(isShowingGuide: $showOceanusGuide, startBreathing: {
                 showOceanusGuide = false
+                showOceanusAR = true
             })
+        }
+        .fullScreenCover(isPresented: $showOceanusAR) {
+            OceanusARScene()
         }
     }
 }

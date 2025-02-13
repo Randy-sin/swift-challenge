@@ -173,40 +173,36 @@ struct OceanusGuideView: View {
         ),
         (
             icon: "globe.desk",
-            title: "AR Planet Experience",
-            description: "Using ARKit on your iPad, watch as your breathing rhythm brings a magical ocean planet to life right on your desk. The planet pulses and glows with each breath. For the best experience, please use a physical iPad device rather than the simulator.",
-            data: "AR visualization enhances mindfulness practice by 45%",
+            title: "Ocean Planet Experience",
+            description: "Watch as your breathing rhythm brings a magical ocean planet to life. The planet pulses and glows with each breath, creating a mesmerizing visualization of your inner calm.",
+            data: "Visualization enhances mindfulness practice by 45%",
             dataIcon: "chart.bar.fill"
         ),
         (
             icon: "brain.head.profile",
             title: "Immersive Breathing",
-            description: "Experience a revolutionary breathing exercise where your breath controls a holographic planet. Perfect for iPad users seeking an immersive, AR-enhanced meditation experience.",
-            data: "95% of users report improved focus with AR guidance",
+            description: "Experience a revolutionary breathing exercise where your breath controls the ocean waves. Perfect for finding your inner peace through the rhythm of the sea.",
+            data: "95% of users report improved focus with guided breathing",
             dataIcon: "person.fill"
         )
     ]
     
     var body: some View {
         ZStack {
-            // Ocean background
+            // Background
             LinearGradient(
                 gradient: Gradient(colors: [
-                    Color(red: 0.05, green: 0.1, blue: 0.2),
-                    Color(red: 0.1, green: 0.2, blue: 0.3)
+                    Color(red: 0.05, green: 0.05, blue: 0.15),
+                    Color(red: 0.1, green: 0.1, blue: 0.25)
                 ]),
                 startPoint: .topLeading,
                 endPoint: .bottomTrailing
             )
             .edgesIgnoringSafeArea(.all)
             
-            // Particle effect
-            EmotionParticleView()
-                .opacity(0.4)
-            
-            VStack(spacing: 20) {
-                // Title Area
-                VStack(spacing: 12) {
+            VStack(spacing: 40) {
+                // Title
+                VStack(spacing: 16) {
                     Text("Journey to Oceanus")
                         .font(.system(size: 40, weight: .bold, design: .rounded))
                         .foregroundStyle(
@@ -219,12 +215,15 @@ struct OceanusGuideView: View {
                                 endPoint: .bottomTrailing
                             )
                         )
+                        .shadow(color: Color(red: 0.2, green: 0.6, blue: 0.9).opacity(0.5), radius: 10)
                     
                     Text("Discover the Healing Power of Ocean Depths")
                         .font(.system(size: 20, weight: .medium, design: .rounded))
                         .foregroundColor(.white.opacity(0.9))
                 }
-                .padding(.top, 32)
+                .padding(.top, 50)
+                .opacity(showContent ? 1 : 0)
+                .offset(y: showContent ? 0 : 20)
                 
                 // Steps Grid
                 LazyVGrid(columns: [
@@ -241,7 +240,7 @@ struct OceanusGuideView: View {
                         )
                         .opacity(showContent ? 1 : 0)
                         .offset(y: showContent ? 0 : 20)
-                        .animation(.easeOut.delay(Double(index) * 0.1), value: showContent)
+                        .animation(.easeOut.delay(Double(index) * 0.2), value: showContent)
                     }
                 }
                 .padding(.horizontal, 24)
@@ -254,26 +253,25 @@ struct OceanusGuideView: View {
                     }
                 }) {
                     Text("Begin Your Ocean Journey")
-                        .font(.system(size: 16, weight: .semibold, design: .rounded))
-                        .foregroundColor(.white)
-                        .padding(.horizontal, 32)
-                        .padding(.vertical, 16)
+                        .font(.system(size: 17, weight: .semibold, design: .rounded))
+                        .foregroundColor(.black)
+                        .frame(height: 46)
+                        .frame(width: 240)
                         .background(
-                            LinearGradient(
-                                colors: [
-                                    Color(red: 0.2, green: 0.6, blue: 0.9),
-                                    Color(red: 0.2, green: 0.4, blue: 0.8)
-                                ],
-                                startPoint: .topLeading,
-                                endPoint: .bottomTrailing
-                            )
+                            Capsule()
+                                .fill(Color.white)
+                                .shadow(color: .white.opacity(0.3), radius: 10)
                         )
-                        .clipShape(Capsule())
                 }
-                .padding(.vertical, 24)
                 .opacity(showContent ? 1 : 0)
                 .offset(y: showContent ? 0 : 20)
+                .padding(.bottom, 40)
             }
+            
+            // Particle effect
+            EmotionParticleView()
+                .opacity(0.6)
+                .allowsHitTesting(false)
             
             // Back Button
             VStack {
@@ -284,19 +282,20 @@ struct OceanusGuideView: View {
                         }
                     }) {
                         Image(systemName: "chevron.left")
-                            .font(.system(size: 20, weight: .medium))
+                            .font(.system(size: 24, weight: .medium))
                             .foregroundColor(.white)
-                            .frame(width: 36, height: 36)
+                            .frame(width: 44, height: 44)
                             .background(
                                 Circle()
                                     .fill(.ultraThinMaterial)
+                                    .shadow(color: .black.opacity(0.15), radius: 8, x: 0, y: 4)
                             )
                     }
-                    .padding(.leading, 16)
+                    .padding(.leading, 20)
                     
                     Spacer()
                 }
-                .padding(.top, 16)
+                .padding(.top, 20)
                 
                 Spacer()
             }

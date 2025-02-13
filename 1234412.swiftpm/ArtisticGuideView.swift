@@ -266,36 +266,131 @@ struct ArtisticGuideView: View {
             )
             .edgesIgnoringSafeArea(.all)
             
-            ScrollView {
-                GeometryReader { geometry in
-                    HStack(spacing: 0) {
-                        VStack(alignment: .leading, spacing: 36) {
-                            titleSection
-                            descriptionSection
-                            Spacer(minLength: 60)  // 添加底部间距
-                        }
-                        .frame(width: geometry.size.width * 0.5)
-                        .padding(.horizontal, 24)
-                        
-                        VStack(spacing: 32) {
-                            journeyTitle
-                            stepsSection
-                            Spacer()  // 让内容靠上
-                            startButton  // 将按钮移到这里
-                                .padding(.bottom, 40)
-                        }
-                        .frame(width: geometry.size.width * 0.45)
-                    }
+            VStack(spacing: 40) {
+                // Title
+                VStack(spacing: 16) {
+                    Text("Artistic Guide")
+                        .font(.system(size: 46, weight: .bold, design: .rounded))
+                        .foregroundStyle(
+                            LinearGradient(
+                                colors: [
+                                    Color(red: 0.4, green: 0.8, blue: 1.0),
+                                    Color(red: 0.2, green: 0.6, blue: 0.8)
+                                ],
+                                startPoint: .topLeading,
+                                endPoint: .bottomTrailing
+                            )
+                        )
+                        .opacity(showContent ? 1 : 0)
+                        .offset(y: showContent ? 0 : 20)
+                    
+                    Text("Healing Through Creative Expression")
+                        .font(.system(size: 24, weight: .medium, design: .rounded))
+                        .foregroundColor(.white.opacity(0.9))
+                        .opacity(showContent ? 1 : 0)
+                        .offset(y: showContent ? 0 : 20)
                 }
+                .padding(.top, 60)
+                
+                // Current Step Card
+                VStack(spacing: 40) {
+                    Text("Healing Journey")
+                        .font(.system(size: 32, weight: .bold, design: .rounded))
+                        .foregroundColor(.white)
+                    
+                    HealingJourneyCard(
+                        step: currentStep,
+                        title: journeySteps[currentStep - 1].title,
+                        description: journeySteps[currentStep - 1].description,
+                        prompt: journeySteps[currentStep - 1].prompt,
+                        data: journeySteps[currentStep - 1].data
+                    )
+                    .opacity(showContent ? 1 : 0)
+                    .offset(y: showContent ? 0 : 20)
+                    
+                    // Navigation Buttons
+                    HStack(spacing: 20) {
+                        if currentStep > 1 {
+                            Button(action: {
+                                withAnimation {
+                                    currentStep -= 1
+                                }
+                            }) {
+                                HStack {
+                                    Image(systemName: "chevron.left")
+                                    Text("Previous")
+                                }
+                                .font(.system(size: 17, weight: .semibold))
+                                .foregroundColor(.white)
+                                .padding(.horizontal, 20)
+                                .padding(.vertical, 10)
+                                .background(
+                                    RoundedRectangle(cornerRadius: 20)
+                                        .fill(.ultraThinMaterial)
+                                )
+                                .clipShape(RoundedRectangle(cornerRadius: 20))
+                            }
+                        }
+                        
+                        if currentStep < journeySteps.count {
+                            Button(action: {
+                                withAnimation {
+                                    currentStep += 1
+                                }
+                            }) {
+                                HStack(spacing: 8) {
+                                    Text("Next")
+                                    Image(systemName: "chevron.right")
+                                }
+                                .font(.system(size: 17, weight: .semibold, design: .rounded))
+                                .foregroundColor(.white)
+                                .padding(.horizontal, 24)
+                                .padding(.vertical, 14)
+                                .background(
+                                    Capsule()
+                                        .fill(Color.white.opacity(0.15))
+                                        .background(.ultraThinMaterial)
+                                        .clipShape(Capsule())
+                                )
+                                .overlay(
+                                    Capsule()
+                                        .stroke(Color.white.opacity(0.2), lineWidth: 1)
+                                )
+                            }
+                        } else {
+                            Button(action: {
+                                withAnimation {
+                                    isShowingGuide = false
+                                    startDrawing()
+                                }
+                            }) {
+                                HStack(spacing: 8) {
+                                    Image(systemName: "paintbrush.fill")
+                                    Text("Begin Creating")
+                                }
+                                .font(.system(size: 17, weight: .semibold, design: .rounded))
+                                .foregroundColor(.black)
+                                .padding(.horizontal, 24)
+                                .padding(.vertical, 14)
+                                .background(Color.white)
+                                .clipShape(Capsule())
+                                .shadow(color: Color.white.opacity(0.3), radius: 10)
+                            }
+                        }
+                    }
+                    .opacity(showContent ? 1 : 0)
+                }
+                .padding(.horizontal, 40)
+                
+                Spacer()
             }
-
-            // Particle effect with Venus color filter - 移到最顶层
+            
+            // Particle effect
             EmotionParticleView()
                 .opacity(0.6)
-                .colorMultiply(Color(red: 1.0, green: 0.8, blue: 0.4))  // 添加金星特有的温暖色调
-                .allowsHitTesting(false)  // 确保不会影响下面视图的交互
+                .allowsHitTesting(false)
             
-            // 返回按钮 - 移到最顶层并固定在左上角
+            // Back Button
             VStack {
                 HStack {
                     Button(action: {
@@ -326,155 +421,6 @@ struct ArtisticGuideView: View {
             withAnimation(.easeOut(duration: 0.8)) {
                 showContent = true
             }
-        }
-    }
-
-    private var titleSection: some View {
-        VStack(spacing: 16) {
-            Text("Artistic Guide")
-                .font(.system(size: 46, weight: .bold, design: .rounded))
-                .foregroundStyle(
-                    LinearGradient(
-                        colors: [
-                            Color(red: 0.4, green: 0.8, blue: 1.0),
-                            Color(red: 0.2, green: 0.6, blue: 0.8)
-                        ],
-                        startPoint: .topLeading,
-                        endPoint: .bottomTrailing
-                    )
-                )
-                .opacity(showContent ? 1 : 0)
-                .offset(y: showContent ? 0 : 20)
-            
-            Text("Healing Through Creative Expression")
-                .font(.system(size: 24, weight: .medium, design: .rounded))
-                .foregroundColor(.white.opacity(0.9))
-                .opacity(showContent ? 1 : 0)
-                .offset(y: showContent ? 0 : 20)
-        }
-        .padding(.top, 60)
-    }
-
-    private var descriptionSection: some View {
-        Text("This guide will help you understand the power of art in healing and how to use it effectively. We'll explore different types of art and its impact on your mental health.")
-            .font(.system(size: 17, weight: .regular, design: .rounded))
-            .foregroundColor(.white.opacity(0.9))
-            .fixedSize(horizontal: false, vertical: true)
-            .lineSpacing(8)
-            .padding(.vertical, 4)
-    }
-
-    private var journeyTitle: some View {
-        Text("Healing Journey")
-            .font(.system(size: 32, weight: .bold, design: .rounded))
-            .foregroundColor(.white)
-    }
-
-    private var stepsSection: some View {
-        VStack(spacing: 40) {
-            // Current Step Card
-            HealingJourneyCard(
-                step: currentStep,
-                title: journeySteps[currentStep - 1].title,
-                description: journeySteps[currentStep - 1].description,
-                prompt: journeySteps[currentStep - 1].prompt,
-                data: journeySteps[currentStep - 1].data
-            )
-            .opacity(showContent ? 1 : 0)
-            .offset(y: showContent ? 0 : 20)
-            
-            // Navigation Buttons
-            HStack(spacing: 20) {
-                if currentStep > 1 {
-                    Button(action: {
-                        withAnimation {
-                            currentStep -= 1
-                        }
-                    }) {
-                        HStack {
-                            Image(systemName: "chevron.left")
-                            Text("Previous")
-                        }
-                        .font(.system(size: 17, weight: .semibold))
-                        .foregroundColor(.white)
-                        .padding(.horizontal, 20)
-                        .padding(.vertical, 10)
-                        .background(
-                            RoundedRectangle(cornerRadius: 20)
-                                .fill(.ultraThinMaterial)
-                        )
-                        .clipShape(RoundedRectangle(cornerRadius: 20))
-                    }
-                }
-                
-                if currentStep < journeySteps.count {
-                    Button(action: {
-                        withAnimation {
-                            currentStep += 1
-                        }
-                    }) {
-                        HStack(spacing: 8) {
-                            Text("Next")
-                            Image(systemName: "chevron.right")
-                        }
-                        .font(.system(size: 17, weight: .semibold, design: .rounded))
-                        .foregroundColor(.white)
-                        .padding(.horizontal, 24)
-                        .padding(.vertical, 14)
-                        .background(
-                            Capsule()
-                                .fill(Color.white.opacity(0.15))
-                                .background(.ultraThinMaterial)
-                                .clipShape(Capsule())
-                        )
-                        .overlay(
-                            Capsule()
-                                .stroke(Color.white.opacity(0.2), lineWidth: 1)
-                        )
-                    }
-                } else {
-                    Button(action: {
-                        withAnimation {
-                            isShowingGuide = false
-                            startDrawing()
-                        }
-                    }) {
-                        HStack(spacing: 8) {
-                            Image(systemName: "paintbrush.fill")
-                            Text("Begin Creating")
-                        }
-                        .font(.system(size: 17, weight: .semibold, design: .rounded))
-                        .foregroundColor(.black)
-                        .padding(.horizontal, 24)
-                        .padding(.vertical, 14)
-                        .background(Color.white)
-                        .clipShape(Capsule())
-                        .shadow(color: Color.white.opacity(0.3), radius: 10)
-                    }
-                }
-            }
-            .opacity(showContent ? 1 : 0)
-        }
-    }
-
-    private var startButton: some View {
-        Button(action: {
-            withAnimation {
-                isShowingGuide = false
-                startDrawing()
-            }
-        }) {
-            HStack(spacing: 8) {
-                Image(systemName: "paintbrush.fill")
-                Text("Begin Creating")
-            }
-            .font(.system(size: 17, weight: .semibold, design: .rounded))
-            .foregroundColor(.black)
-            .padding(.horizontal, 24)
-            .padding(.vertical, 14)
-            .background(Color.white)
-            .clipShape(Capsule())
-            .shadow(color: Color.white.opacity(0.3), radius: 10)
         }
     }
 }

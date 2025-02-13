@@ -43,7 +43,8 @@ let package = Package(
             path: ".",
             resources: [
                 .copy("ML"),
-                .process("Assets.xcassets")
+                .process("Assets.xcassets"),
+                .copy("Neptune.usdz")
             ]
         )
     ]
