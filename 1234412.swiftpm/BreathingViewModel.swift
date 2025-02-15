@@ -58,6 +58,7 @@ class BreathingViewModel: ObservableObject {
     @Published var isActive: Bool = false
     @Published var totalProgress: Double = 0.0  // 总体进度
     @Published var currentCycleCount: Int = 0   // 当前循环次数
+    @Published var showTranscendence: Bool = false
     
     // MARK: - Private Properties
     private var timer: Timer?
@@ -77,33 +78,24 @@ class BreathingViewModel: ObservableObject {
     // MARK: - Public Methods
     func startBreathing() {
         guard !isActive else { return }
-        print("▶️ Starting breathing exercise")
         
-        // 重置所有状态
         progress = 0.0
         totalProgress = 0.0
         currentCycleCount = 1
         
-        // 先设置为呼气状态，这样切换到吸气时就会有动画
-        print("🔄 Setting initial phase to exhale")
         currentPhase = .exhale
         
-        // 延迟一帧后切换到吸气状态，确保动画正确触发
         DispatchQueue.main.async {
-            print("🔄 Transitioning to inhale phase")
             self.currentPhase = .inhale
             self.phaseStartTime = Date()
             self.cycleStartTime = Date()
             
-            // 启动定时器
             self.isActive = true
             self.startTimer()
-            print("✅ Breathing exercise started")
         }
     }
     
     func stopBreathing() {
-        print("⏹️ Stopping breathing exercise")
         isActive = false
         activeTask?.cancel()
         activeTask = nil
@@ -124,7 +116,6 @@ class BreathingViewModel: ObservableObject {
     }
     
     private func cleanup() {
-        print("🧹 Cleaning up resources")
         activeTask?.cancel()
         activeTask = nil
         progress = 0.0
@@ -135,7 +126,6 @@ class BreathingViewModel: ObservableObject {
     }
     
     private func startTimer() {
-        print("⏰ Starting timer")
         activeTask?.cancel()
         
         activeTask = Task { [weak self] in
@@ -143,30 +133,20 @@ class BreathingViewModel: ObservableObject {
             
             while !Task.isCancelled && self.isActive {
                 self.updateProgress()
-                try? await Task.sleep(nanoseconds: 50_000_000) // 0.05 seconds
+                try? await Task.sleep(nanoseconds: 50_000_000)
             }
         }
     }
     
     private func updateProgress() {
-        guard let startTime = phaseStartTime else {
-            print("⚠️ No start time available")
-            return
-        }
+        guard let startTime = phaseStartTime else { return }
         
         let elapsed = Date().timeIntervalSince(startTime)
         let duration = currentPhase.duration
-        let oldProgress = progress
         
-        // 更新当前阶段进度
         progress = min(elapsed / duration, 1.0)
         
-        if oldProgress != progress {
-            print("⏱️ Progress Update: \(String(format: "%.2f", progress)) - Phase: \(currentPhase) - Elapsed: \(String(format: "%.2f", elapsed))s")
-        }
-        
         if progress >= 1.0 {
-            print("🔄 Phase Complete: Moving to next phase")
             moveToNextPhase()
         }
     }
@@ -177,29 +157,23 @@ class BreathingViewModel: ObservableObject {
         
         let nextIndex = (currentIndex + 1) % phases.count
         let nextPhase = phases[nextIndex]
-        print("🔀 Phase Transition: \(currentPhase) -> \(nextPhase)")
-        print("📈 Current cycle: \(currentCycleCount)")
         
         currentPhase = nextPhase
         phaseStartTime = Date()
         progress = 0.0
         
-        // 如果完成一个完整的循环
         if nextIndex == 0 {
             cycleStartTime = Date()
             currentCycleCount += 1
-            print("📅 New Cycle: \(currentCycleCount)")
             
-            // 如果达到目标循环次数，停止
             if currentCycleCount > targetCycles {
-                print("🏁 Completed all cycles")
+                showTranscendence = true
                 stopBreathing()
             }
         }
     }
     
     deinit {
-        print("🗑️ BreathingViewModel deinit")
         activeTask?.cancel()
         cancellables.removeAll()
     }
