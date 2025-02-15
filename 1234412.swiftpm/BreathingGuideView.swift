@@ -4,127 +4,205 @@ struct BreathingGuideView: View {
     @StateObject private var viewModel = BreathingViewModel()
     @State private var scale: CGFloat = 1.0
     @State private var rotation: Double = 0
+    @State private var opacity: Double = 0
+    @State private var textScale: CGFloat = 0.8
+    @State private var blurRadius: CGFloat = 0
     
-    private let baseCircleSize: CGFloat = 150
+    private let baseCircleSize: CGFloat = 180
     
     var body: some View {
-        VStack(spacing: 30) {
+        VStack(spacing: 40) {
             Spacer()
+                .frame(height: 40)
             
-            // 呼吸动画视图
+            // Breathing animation view
             ZStack {
-                // 外层装饰圆环
-                ForEach(0..<6) { index in
+                // Decorative outer circles
+                ForEach(0..<8) { index in
                     Circle()
                         .stroke(
-                            viewModel.currentPhase.color.opacity(0.2),
-                            lineWidth: 1
+                            viewModel.currentPhase.color.opacity(0.15),
+                            lineWidth: 0.5
                         )
-                        .frame(width: baseCircleSize + CGFloat(index * 20))
-                        .rotationEffect(.degrees(rotation + Double(index) * 10))
+                        .frame(width: baseCircleSize + CGFloat(index * 25))
+                        .rotationEffect(.degrees(rotation + Double(index) * 8))
+                        .blur(radius: blurRadius)
                 }
                 
-                // 主呼吸圆圈
-                Circle()
-                    .fill(
-                        RadialGradient(
-                            gradient: Gradient(colors: [
-                                viewModel.currentPhase.color.opacity(0.5),
-                                viewModel.currentPhase.color.opacity(0.2)
-                            ]),
-                            center: .center,
-                            startRadius: 0,
-                            endRadius: baseCircleSize/2
+                // Main breathing circle
+                ZStack {
+                    // Outer glow effect
+                    Circle()
+                        .fill(
+                            RadialGradient(
+                                gradient: Gradient(colors: [
+                                    viewModel.currentPhase.color.opacity(0.3),
+                                    viewModel.currentPhase.color.opacity(0.05)
+                                ]),
+                                center: .center,
+                                startRadius: 0,
+                                endRadius: baseCircleSize/1.5
+                            )
                         )
-                    )
-                    .frame(width: baseCircleSize, height: baseCircleSize)
-                    .scaleEffect(scale)
-                    .overlay(
-                        Circle()
-                            .stroke(viewModel.currentPhase.color, lineWidth: 2)
-                            .scaleEffect(scale)
-                    )
-                    .animation(viewModel.currentPhase.animation, value: scale)
+                        .frame(width: baseCircleSize * 1.2, height: baseCircleSize * 1.2)
+                        .scaleEffect(scale)
+                        .blur(radius: 15)
+                    
+                    // Main breathing circle
+                    Circle()
+                        .fill(
+                            RadialGradient(
+                                gradient: Gradient(colors: [
+                                    viewModel.currentPhase.color.opacity(0.6),
+                                    viewModel.currentPhase.color.opacity(0.2)
+                                ]),
+                                center: .center,
+                                startRadius: 0,
+                                endRadius: baseCircleSize/2
+                            )
+                        )
+                        .frame(width: baseCircleSize, height: baseCircleSize)
+                        .scaleEffect(scale)
+                        .overlay(
+                            Circle()
+                                .stroke(
+                                    viewModel.currentPhase.color.opacity(0.8),
+                                    lineWidth: 1.5
+                                )
+                                .scaleEffect(scale)
+                        )
+                        .shadow(color: viewModel.currentPhase.color.opacity(0.3), radius: 20, x: 0, y: 0)
+                }
                 
-                // 呼吸提示文字
-                VStack(spacing: 8) {
+                // Breathing guide text
+                VStack(spacing: 12) {
                     Text(viewModel.currentPhase.description)
-                        .font(.system(size: 28, weight: .medium, design: .rounded))
+                        .font(.system(size: 32, weight: .light, design: .rounded))
                         .foregroundColor(.white)
+                        .scaleEffect(textScale)
+                    
+                    Text(viewModel.currentPhase.guideText)
+                        .font(.system(size: 18, weight: .regular, design: .rounded))
+                        .foregroundColor(.white.opacity(0.7))
+                        .multilineTextAlignment(.center)
+                        .scaleEffect(textScale)
                     
                     if viewModel.currentCycleCount > 0 {
-                        Text("第 \(viewModel.currentCycleCount) 组")
-                            .font(.system(size: 17, weight: .regular, design: .rounded))
-                            .foregroundColor(.white.opacity(0.8))
+                        Text("Round \(viewModel.currentCycleCount) of 3")
+                            .font(.system(size: 16, weight: .medium, design: .rounded))
+                            .foregroundColor(.white.opacity(0.5))
+                            .padding(.top, 8)
                     }
                 }
+                .blur(radius: blurRadius * 0.3)
             }
-            .onChange(of: viewModel.currentPhase) { oldValue, newValue in
-                updateAnimation(for: newValue)
-            }
+            .opacity(opacity)
             
             Spacer()
             
-            // 进度指示器
-            VStack(spacing: 15) {
-                // 当前阶段进度
+            // 进度条容器
+            VStack(spacing: 20) {
+                // 添加一个占位 Spacer 来增加与上方内容的间距
+                Spacer()
+                    .frame(height: 30)
+                
+                // Progress bar
                 ProgressView(value: viewModel.progress)
                     .progressViewStyle(
-                        CustomProgressViewStyle(
-                            color: viewModel.currentPhase.color
-                        )
-                    )
-                    .frame(width: 250)
-                
-                // 总体进度
-                ProgressView(value: viewModel.totalProgress)
-                    .progressViewStyle(
-                        CustomProgressViewStyle(
-                            color: .white,
-                            height: 2
+                        ModernProgressViewStyle(
+                            color: viewModel.currentPhase.color,
+                            height: 4
                         )
                     )
                     .frame(width: 200)
             }
-            .padding(.bottom, 50)
+            .opacity(opacity)
+            .padding(.bottom, 80) // 增加底部安全距离
+        }
+        .onChange(of: viewModel.currentPhase) { oldValue, newValue in
+            print("🎭 Phase Changed: \(oldValue) -> \(newValue)")
+            
+            switch newValue {
+            case .inhale:
+                withAnimation(.easeInOut(duration: newValue.duration)) {
+                    scale = newValue.scale
+                    blurRadius = 5
+                }
+                
+            case .hold:
+                scale = oldValue.scale
+                withAnimation(.easeInOut(duration: 1.0)) {
+                    blurRadius = 2
+                }
+                
+            case .exhale:
+                withAnimation(.easeInOut(duration: newValue.duration)) {
+                    scale = newValue.scale
+                    blurRadius = 0
+                }
+            }
+            
+            // 文字动画
+            withAnimation(.spring(duration: 0.6)) {
+                textScale = 0.8
+                DispatchQueue.main.asyncAfter(deadline: .now() + 0.2) {
+                    withAnimation(.spring(duration: 0.6)) {
+                        textScale = 1.0
+                    }
+                }
+            }
         }
         .onAppear {
-            viewModel.startBreathing()
-            // 开始旋转动画
+            print("🚀 View appeared")
+            
+            // 初始状态设置
+            scale = 1.0
+            opacity = 0
+            blurRadius = 0
+            
+            // 淡入动画
+            withAnimation(.easeIn(duration: 1.2)) {
+                opacity = 1.0
+            }
+            
+            // 旋转动画
             withAnimation(
-                .linear(duration: 20)
+                .linear(duration: 25)
                 .repeatForever(autoreverses: false)
             ) {
                 rotation = 360
+            }
+            
+            // 延迟启动呼吸练习
+            DispatchQueue.main.asyncAfter(deadline: .now() + 1.0) {
+                print("🌟 Starting breathing exercise")
+                viewModel.startBreathing()
             }
         }
         .onDisappear {
             viewModel.stopBreathing()
         }
     }
-    
-    private func updateAnimation(for phase: BreathingPhase) {
-        withAnimation(phase.animation) {
-            scale = phase.scale
-        }
-    }
 }
 
-// 自定义进度条样式
-struct CustomProgressViewStyle: ProgressViewStyle {
+// Modern progress bar style
+struct ModernProgressViewStyle: ProgressViewStyle {
     var color: Color
     var height: CGFloat = 4
     
     func makeBody(configuration: Configuration) -> some View {
         GeometryReader { geometry in
             ZStack(alignment: .leading) {
-                RoundedRectangle(cornerRadius: height/2)
+                // Background track
+                Capsule()
                     .frame(height: height)
-                    .foregroundColor(color.opacity(0.2))
+                    .foregroundColor(color.opacity(0.15))
                 
-                RoundedRectangle(cornerRadius: height/2)
+                // Progress bar
+                Capsule()
                     .frame(width: CGFloat(configuration.fractionCompleted ?? 0) * geometry.size.width, height: height)
-                    .foregroundColor(color)
+                    .foregroundColor(color.opacity(0.8))
+                    .shadow(color: color.opacity(0.3), radius: 3, x: 0, y: 0)
             }
         }
     }
@@ -132,7 +210,7 @@ struct CustomProgressViewStyle: ProgressViewStyle {
 
 #Preview {
     ZStack {
-        Color.black
+        Color.black.edgesIgnoringSafeArea(.all)
         BreathingGuideView()
     }
 } 

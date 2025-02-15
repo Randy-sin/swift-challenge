@@ -11,10 +11,10 @@ final class OceanusEntity {
     // 缩放相关属性
     private let minScale: Float = 0.0001  // 最小缩放比例
     private let maxScale: Float = 0.05    // 最大缩放比例
-    private let defaultScale: Float = 0.006 // 默认缩放比例（再增大两倍）
+    private let defaultScale: Float = 0.006 // 默认缩放比例
     private let scaleSpeed: Float = 1.0    // 缩放速度
     private let scaleDamping: Float = 0.2  // 阻尼系数
-    private var currentScale: Float = 0.006 // 初始缩放值（也要相应增大）
+    private var currentScale: Float = 0.006 // 初始缩放值
     private var normalizedScale: Float = 1.0 // 存储标准化比例
     
     // MARK: - 初始化
@@ -44,18 +44,6 @@ final class OceanusEntity {
             
             // 添加到场景
             anchor.addChild(neptune)
-            
-            // 设置旋转动画
-            let rotation = simd_quatf(angle: 2 * .pi, axis: [0, 1, 0])
-            var rotationTransform = transform
-            rotationTransform.rotation = rotation
-            
-            neptune.move(
-                to: rotationTransform,
-                relativeTo: anchor,
-                duration: 20,
-                timingFunction: .linear
-            )
         }
         return anchor
     }

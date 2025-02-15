@@ -44,7 +44,8 @@ let package = Package(
             resources: [
                 .copy("ML"),
                 .process("Assets.xcassets"),
-                .copy("Neptune.usdz")
+                .copy("Neptune.usdz"),
+                .copy("Ocean_-_Surface.usdz")
             ]
         )
     ]
