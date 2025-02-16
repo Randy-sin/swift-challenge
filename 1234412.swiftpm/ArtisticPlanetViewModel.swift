@@ -19,7 +19,6 @@ final class ArtisticPlanetViewModel: ObservableObject {
     @Published var isDrawingValid: Bool = false
     @Published var showValidationDialog: Bool = false
     @Published var showDrawingFeedback: Bool = false
-    @Published var debugImage: UIImage? = nil  // 添加调试图像属性
     
     // Example images for each step
     private let exampleImages = [
@@ -170,14 +169,11 @@ final class ArtisticPlanetViewModel: ObservableObject {
     // 验证当前绘画
     func validateCurrentDrawing(forStep step: Int) {
         print("🎨 Starting drawing validation for step \(step)...")
-        print("📝 Current step: \(step)")
-        print("✏️ Current drawing strokes: \(currentDrawing.strokes.count)")
-        print("📐 Current drawing bounds: \(currentDrawing.bounds)")
         
         // 重置当前步骤的验证状态
         resetStepValidation(step)
         
-        // 获取当前步骤需要的对象
+        // 1. 获取当前步骤需要的对象
         guard let expectedClass = requiredObjects[step] else {
             handleValidationError("Invalid step number: \(step)")
             return
@@ -185,113 +181,123 @@ final class ArtisticPlanetViewModel: ObservableObject {
         
         print("🎯 Expected object for step \(step): \(expectedClass)")
         
-        // Check if there's actual drawing content
-        if currentDrawing.strokes.isEmpty {
-            print("⚠️ No strokes in current drawing")
-            let message = "Drawing test successful! Please click **[Validate]** again to continue."
-            self.drawingValidationMessage = message
-            self.isDrawingValid = false
-            self.showValidationDialog = true
+        // 2. 直接从当前绘画创建图像
+        let drawingBounds = currentDrawing.bounds
+        let format = UIGraphicsImageRendererFormat()
+        format.scale = 1.0
+        format.opaque = true
+        
+        // 确保绘画不为空
+        guard !drawingBounds.isEmpty else {
+            handleValidationError("Please draw something first")
             return
         }
         
-        guard let drawingImage = renderDrawingToImage() else {
-            print("❌ Failed to render drawing")
-            return
+        // 3. 渲染绘画内容
+        let drawingImage = UIGraphicsImageRenderer(bounds: drawingBounds, format: format).image { context in
+            // 设置白色背景
+            UIColor.white.setFill()
+            context.fill(drawingBounds)
+            // 绘制内容
+            currentDrawing.image(from: drawingBounds, scale: 1.0).draw(in: drawingBounds)
         }
         
-        guard let cgImage = drawingImage.cgImage else {
+        // 4. 调整为模型所需的尺寸 (224x224)
+        let targetSize = CGSize(width: 224, height: 224)
+        let finalImage = UIGraphicsImageRenderer(size: targetSize, format: format).image { context in
+            // 计算适当的缩放和位置以保持绘画的纵横比
+            let scale = min(targetSize.width / drawingBounds.width,
+                          targetSize.height / drawingBounds.height)
+            let scaledWidth = drawingBounds.width * scale
+            let scaledHeight = drawingBounds.height * scale
+            let x = (targetSize.width - scaledWidth) / 2
+            let y = (targetSize.height - scaledHeight) / 2
+            
+            // 设置白色背景
+            UIColor.white.setFill()
+            context.fill(CGRect(origin: .zero, size: targetSize))
+            
+            // 绘制缩放后的图像
+            context.cgContext.interpolationQuality = .high
+            drawingImage.draw(in: CGRect(x: x, y: y, width: scaledWidth, height: scaledHeight))
+        }
+        
+        guard let cgImage = finalImage.cgImage else {
             print("❌ Failed to get CGImage from drawing")
+            handleValidationError("Failed to process drawing")
             return
         }
         
-        print("📏 Image size: \(cgImage.width)x\(cgImage.height)")
-        
+        // 5. 执行 CoreML 识别
         guard let request = classificationRequest else {
             print("❌ Model not initialized")
+            handleValidationError("AI model not ready")
             return
         }
-
-        // 创建请求处理器时不使用额外的选项
-        let handler = VNImageRequestHandler(
-            cgImage: cgImage,
-            orientation: .up
-        )
-
-        Task { @MainActor [weak self] in
-            guard let self = self else { return }
+        
+        do {
+            let handler = VNImageRequestHandler(cgImage: cgImage, options: [:])
+            try handler.perform([request])
             
-            do {
-                try handler.perform([request])
+            if let results = request.results as? [VNClassificationObservation],
+               let topResult = results.first {
+                print("🔍 Classification results:")
+                print("  - Top class: \(topResult.identifier)")
+                print("  - Confidence: \(topResult.confidence)")
                 
-                if let results = request.results as? [VNClassificationObservation] {
-                    print("🔍 All classification results for step \(step):")
-                    for result in results {
-                        print("- \(result.identifier): \(result.confidence)")
+                let isValid = topResult.identifier == expectedClass &&
+                             topResult.confidence >= DrawingType.forStep(step)?.confidenceThreshold ?? 0.5
+                
+                // 6. 根据识别结果显示相应信息
+                if isValid {
+                    let successMessage: String
+                    switch step {
+                    case 1:
+                        successMessage = "Amazing! Your flower is beautiful, filled with colors of hope!"
+                    case 2:
+                        successMessage = "Wonderful! Your tree is full of life, reaching towards the sky!"
+                    case 3:
+                        successMessage = "Perfect! Your river flows smoothly, carrying emotions along!"
+                    case 4:
+                        successMessage = "Beautiful! Your stars shine with the light of dreams!"
+                    default:
+                        successMessage = "Great job! That looks wonderful!"
                     }
-                    
-                    if let topResult = results.first {
-                        let confidence = topResult.confidence
-                        let identifier = topResult.identifier
-                        
-                        print("✨ Top classification result: \(identifier) with confidence: \(confidence)")
-                        print("🎯 Expected class: \(expectedClass)")
-                        
-                        let isValid = identifier == expectedClass && confidence >= 0.5
-                        
-                        if isValid {
-                            let successMessage: String
-                            switch step {
-                            case 1:
-                                successMessage = "Amazing! Your flower is beautiful, filled with colors of hope!"
-                            case 2:
-                                successMessage = "Wonderful! Your tree is full of life, reaching towards the sky!"
-                            case 3:
-                                successMessage = "Perfect! Your river flows smoothly, carrying emotions along!"
-                            case 4:
-                                successMessage = "Beautiful! Your stars shine with the light of dreams!"
-                            default:
-                                successMessage = "Great job! That looks wonderful!"
-                            }
-                            self.drawingValidationMessage = successMessage
-                            self.isDrawingValid = isValid
-                            self.showValidationDialog = true
-                        } else {
-                            let failureMessage: String
-                            switch step {
-                            case 1:
-                                failureMessage = "I see your creativity, but maybe we could add more elements that represent blooming and growth. Would you like to check out the tip?"
-                            case 2:
-                                failureMessage = "I see your artistic spirit, but maybe we could make it look more tree-like with branches reaching up. Would you like to check out the tip?"
-                            case 3:
-                                failureMessage = "I see your flowing lines, but maybe we could make it more river-like with gentle curves. Would you like to check out the tip?"
-                            case 4:
-                                failureMessage = "These don't quite look like stars. Try adding some bright points in the sky!"
-                            default:
-                                failureMessage = "Try again, you can do it!"
-                            }
-                            self.drawingValidationMessage = failureMessage
-                            self.isDrawingValid = isValid
-                            self.showValidationDialog = true
-                        }
+                    self.drawingValidationMessage = successMessage
+                    self.isDrawingValid = true
+                } else {
+                    let failureMessage: String
+                    switch step {
+                    case 1:
+                        failureMessage = "I see your creativity, but maybe we could add more elements that represent blooming hope. Try again!"
+                    case 2:
+                        failureMessage = "I see your artistic spirit, but maybe we could make it look more tree-like with branches. Try again!"
+                    case 3:
+                        failureMessage = "I see your flowing lines, but maybe we could make it more river-like with curves. Try again!"
+                    case 4:
+                        failureMessage = "I see your effort, but these don't quite look like stars yet. Try adding some bright points!"
+                    default:
+                        failureMessage = "Keep trying, you're getting closer!"
                     }
+                    self.drawingValidationMessage = failureMessage
+                    self.isDrawingValid = false
                 }
-            } catch {
-                print("❌ Classification error: \(error.localizedDescription)")
-                #if targetEnvironment(simulator)
-                self.drawingValidationMessage = "CoreML context cannot be created in simulator.\nPlease tap 'Skip' to continue or run on a real device."
-                #else
-                self.drawingValidationMessage = "Sorry, an error occurred during validation. Please try again."
-                #endif
-                self.isDrawingValid = false
                 self.showValidationDialog = true
             }
+        } catch {
+            print("❌ Classification error: \(error.localizedDescription)")
+            #if targetEnvironment(simulator)
+            self.drawingValidationMessage = "CoreML context cannot be created in simulator.\nPlease tap 'Skip' to continue or run on a real device."
+            #else
+            self.drawingValidationMessage = "Sorry, an error occurred during validation. Please try again."
+            #endif
+            self.isDrawingValid = false
+            self.showValidationDialog = true
         }
     }
     
     // 获取当前窗口的辅助方法
     private func getCurrentWindow() -> UIWindow? {
-        // 获取当前活跃的场景
         guard let windowScene = UIApplication.shared.connectedScenes
             .first(where: { $0.activationState == .foregroundActive }) as? UIWindowScene,
               let window = windowScene.windows.first(where: { $0.isKeyWindow }) else {
@@ -300,54 +306,22 @@ final class ArtisticPlanetViewModel: ObservableObject {
         return window
     }
     
-    // Render PKDrawing to UIImage
+    // 从画布渲染绘画内容为图像
     private func renderDrawingToImage() -> UIImage? {
-        // 获取当前窗口
-        guard let window = getCurrentWindow() else {
-            print("⚠️ No window found")
-            return nil
+        let bounds = currentDrawing.bounds
+        
+        // 创建渲染器
+        let renderer = UIGraphicsImageRenderer(bounds: bounds)
+        
+        // 渲染绘画内容
+        let image = renderer.image { context in
+            currentDrawing.image(from: bounds, scale: 1.0).draw(in: bounds)
         }
         
-        // 创建一个与屏幕大小相同的上下文
-        let format = UIGraphicsImageRendererFormat()
-        format.scale = 1.0
-        format.opaque = true
+        print("✅ Successfully rendered drawing to image")
+        print("📏 Image size: \(image.size.width)x\(image.size.height)")
         
-        let renderer = UIGraphicsImageRenderer(bounds: window.bounds, format: format)
-        let screenshot = renderer.image { context in
-            // 渲染整个窗口
-            window.drawHierarchy(in: window.bounds, afterScreenUpdates: true)
-        }
-        
-        // 调整为模型所需的尺寸 (224x224)
-        let targetSize = CGSize(width: 224, height: 224)
-        let format2 = UIGraphicsImageRendererFormat()
-        format2.scale = 1.0
-        format2.opaque = true
-        
-        let finalImage = UIGraphicsImageRenderer(size: targetSize, format: format2).image { context in
-            context.cgContext.setFillColor(UIColor.white.cgColor)
-            context.cgContext.fill(CGRect(origin: .zero, size: targetSize))
-            
-            // 使用高质量的缩放
-            context.cgContext.interpolationQuality = .high
-            screenshot.draw(in: CGRect(origin: .zero, size: targetSize))
-        }
-        
-        // 保存调试图像
-        if let data = finalImage.pngData() {
-            do {
-                let documentsPath = FileManager.default.urls(for: .documentDirectory, in: .userDomainMask)[0]
-                let debugImagePath = documentsPath.appendingPathComponent("debug_drawing_\(Date().timeIntervalSince1970).png")
-                try data.write(to: debugImagePath)
-                print("🔍 Debug image saved to: \(debugImagePath.path)")
-                print("📏 Final image size: \(finalImage.size.width)x\(finalImage.size.height)")
-            } catch {
-                print("❌ Failed to save debug image: \(error.localizedDescription)")
-            }
-        }
-        
-        return finalImage
+        return image
     }
     
     private func setupPlanet() {
@@ -619,12 +593,13 @@ final class ArtisticPlanetViewModel: ObservableObject {
                 options: []
             )
             
-            // 按顺序叠加每个步骤的纹理
+            // 按顺序叠加每个步骤的纹理，使用不同的混合模式和透明度
             for step in 1...4 {
                 if let texture = processedTextures[step] {
+                    let (_, variations) = getStepColorAndVariations(step: step)
                     texture.draw(in: CGRect(origin: .zero, size: baseTextureSize),
-                               blendMode: .normal,
-                               alpha: 0.8)  // 降低不透明度以便能看到底层的蓝色
+                               blendMode: variations.blendMode,
+                               alpha: variations.baseAlpha)
                 }
             }
         }
