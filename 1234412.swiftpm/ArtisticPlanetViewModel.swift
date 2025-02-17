@@ -187,12 +187,6 @@ final class ArtisticPlanetViewModel: ObservableObject {
         format.scale = 1.0
         format.opaque = true
         
-        // 确保绘画不为空
-        guard !drawingBounds.isEmpty else {
-            handleValidationError("Please draw something first")
-            return
-        }
-        
         // 3. 渲染绘画内容
         let drawingImage = UIGraphicsImageRenderer(bounds: drawingBounds, format: format).image { context in
             // 设置白色背景
@@ -475,17 +469,17 @@ final class ArtisticPlanetViewModel: ObservableObject {
                 rotations: [0, 90, 180, 270],
                 alphas: [1.0, 0.8, 0.6]
             )
-        case 3: // 河流
+        case 3: // 河流 - 减少重复和缩放
             return (
-                scales: [0.8, 0.6],
-                rotations: [0, 45, 90, 135],
-                alphas: [1.0, 0.7]
+                scales: [0.6, 0.5],  // 减小缩放范围
+                rotations: [0, 45],   // 减少旋转次数
+                alphas: [0.6, 0.4]    // 降低透明度
             )
-        case 4: // 星星 - 减少重复次数，增加大小差异
+        case 4: // 星星
             return (
-                scales: [0.3, 0.2],  // 减小星星尺寸
-                rotations: [0, 45],   // 减少旋转变化
-                alphas: [1.0, 0.8]    // 保持较高亮度
+                scales: [0.3, 0.2],
+                rotations: [0, 45],
+                alphas: [1.0, 0.8]
             )
         default:
             return (
@@ -517,8 +511,8 @@ final class ArtisticPlanetViewModel: ObservableObject {
             )
         case 3: // 河流
             return (
-                UIColor(red: 0.3, green: 0.6, blue: 0.95, alpha: 1.0),
-                StepVariations(blendMode: .plusLighter, baseAlpha: 0.7, addGlow: true)
+                UIColor(red: 0.3, green: 0.6, blue: 0.95, alpha: 0.8),  // 降低颜色的不透明度
+                StepVariations(blendMode: .overlay, baseAlpha: 0.5, addGlow: false)  // 使用 overlay 混合模式，降低基础透明度，暂时关闭发光
             )
         case 4: // 星星
             return (

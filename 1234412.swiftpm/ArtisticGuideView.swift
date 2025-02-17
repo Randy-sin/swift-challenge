@@ -299,11 +299,11 @@ struct ArtisticGuideView: View {
                         .foregroundColor(.white)
                     
                     HealingJourneyCard(
-                        step: currentStep,
-                        title: journeySteps[currentStep - 1].title,
-                        description: journeySteps[currentStep - 1].description,
-                        prompt: journeySteps[currentStep - 1].prompt,
-                        data: journeySteps[currentStep - 1].data
+                        step: min(currentStep, journeySteps.count),
+                        title: journeySteps[min(currentStep - 1, journeySteps.count - 1)].title,
+                        description: journeySteps[min(currentStep - 1, journeySteps.count - 1)].description,
+                        prompt: journeySteps[min(currentStep - 1, journeySteps.count - 1)].prompt,
+                        data: journeySteps[min(currentStep - 1, journeySteps.count - 1)].data
                     )
                     .opacity(showContent ? 1 : 0)
                     .offset(y: showContent ? 0 : 20)
@@ -313,7 +313,7 @@ struct ArtisticGuideView: View {
                         if currentStep > 1 {
                             Button(action: {
                                 withAnimation {
-                                    currentStep -= 1
+                                    currentStep = max(1, currentStep - 1)
                                 }
                             }) {
                                 HStack {
@@ -335,7 +335,7 @@ struct ArtisticGuideView: View {
                         if currentStep < journeySteps.count {
                             Button(action: {
                                 withAnimation {
-                                    currentStep += 1
+                                    currentStep = min(journeySteps.count, currentStep + 1)
                                 }
                             }) {
                                 HStack(spacing: 8) {

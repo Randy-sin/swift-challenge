@@ -97,16 +97,27 @@ struct SmileDetectionView: View {
                                 .font(.system(size: 20, weight: .semibold, design: .rounded))
                                 .padding(.horizontal, 30)
                                 .padding(.vertical, 12)
-                                .background(visionProcessor.isSmiling ? Color.green.opacity(0.8) : Color.white.opacity(0.2))
+                                .background(
+                                    visionProcessor.isSmiling ? 
+                                        Color.green.opacity(0.8) : 
+                                        Color.black.opacity(0.7)
+                                )
                                 .foregroundColor(.white)
                                 .cornerRadius(25)
                             
                             // 微笑进度指示器
                             ZStack {
+                                // 外圈
+                                Circle()
+                                    .fill(Color.black.opacity(0.7))
+                                    .frame(width: 90, height: 90)
+                                
+                                // 进度条背景
                                 Circle()
                                     .stroke(Color.white.opacity(0.3), lineWidth: 6)
                                     .frame(width: 80, height: 80)
                                 
+                                // 进度条
                                 Circle()
                                     .trim(from: 0, to: min(CGFloat(visionProcessor.smilingDuration / 2.0), 1.0))
                                     .stroke(Color.white, style: StrokeStyle(lineWidth: 6, lineCap: .round))
@@ -123,6 +134,7 @@ struct SmileDetectionView: View {
                                         .foregroundColor(.white)
                                 }
                             }
+                            .shadow(color: .black.opacity(0.3), radius: 5, x: 0, y: 2)
                         }
                         .padding(.trailing, 20)
                         .padding(.vertical, 20)
@@ -144,7 +156,7 @@ struct SmileDetectionView: View {
                 }
             }
         }
-        .onChange(of: visionProcessor.hasReachedTarget) { newValue in
+        .onChange(of: visionProcessor.hasReachedTarget, initial: false) { oldValue, newValue in
             if newValue {
                 withAnimation(.easeInOut(duration: 0.5)) {
                     showCompletion = true

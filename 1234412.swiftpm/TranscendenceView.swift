@@ -7,6 +7,7 @@ struct TranscendenceView: View {
     @State private var rippleScale: CGFloat = 1.0
     @State private var baseRotation: Double = 0
     @State private var showFinishButton: Bool = false
+    @State private var showCompletion: Bool = false
     @Environment(\.dismiss) private var dismiss
     
     private let baseSize: CGFloat = 180
@@ -113,7 +114,7 @@ struct TranscendenceView: View {
                     Spacer()
                     Button(action: {
                         withAnimation(.easeOut(duration: 0.8)) {
-                            dismiss()
+                            showCompletion = true
                         }
                     }) {
                         Text("Journey Complete")
@@ -131,6 +132,9 @@ struct TranscendenceView: View {
                     .padding(.bottom, 50)
                 }
             }
+        }
+        .fullScreenCover(isPresented: $showCompletion) {
+            OceanusCompletionView()
         }
         .onChange(of: effect.currentState) { oldState, newState in
             if newState == .finished {

@@ -14,7 +14,6 @@ struct ArtisticPlanetView: View {
     @State private var showCompleteAlert = false
     @State private var showCompletionDialog = false
     @State private var showArtisticCompletion = false
-    @State private var showDebugImage = false
     @State private var showTip = false
     
     let steps = [
@@ -80,31 +79,19 @@ struct ArtisticPlanetView: View {
                                 
                                 if currentStep < steps.count {
                                     HStack(spacing: 12) {
-                                    Button(action: {
-                                            viewModel.validateCurrentDrawing(forStep: currentStep)
-                                    }) {
-                                        HStack(spacing: 8) {
-                                            Text("Validate")
-                                            Image(systemName: "checkmark.circle")
-                                        }
-                                        .font(.system(size: 15, weight: .medium))
-                                        .foregroundColor(.white)
-                                        .padding(.horizontal, 16)
-                                        .padding(.vertical, 8)
-                                        .background(.ultraThinMaterial)
-                                        .cornerRadius(16)
-                                        }
-                                        
                                         Button(action: {
-                                            viewModel.debugImage = viewModel.getDebugImage()
-                                            showDebugImage = true
+                                            viewModel.validateCurrentDrawing(forStep: currentStep)
                                         }) {
-                                            Image(systemName: "magnifyingglass")
-                                                .font(.system(size: 15, weight: .medium))
-                                                .foregroundColor(.white)
-                                                .padding(12)
-                                                .background(.ultraThinMaterial)
-                                                .clipShape(Circle())
+                                            HStack(spacing: 8) {
+                                                Text("Validate")
+                                                Image(systemName: "checkmark.circle")
+                                            }
+                                            .font(.system(size: 15, weight: .medium))
+                                            .foregroundColor(.white)
+                                            .padding(.horizontal, 16)
+                                            .padding(.vertical, 8)
+                                            .background(.ultraThinMaterial)
+                                            .cornerRadius(16)
                                         }
                                     }
                                 } else {
@@ -151,9 +138,9 @@ struct ArtisticPlanetView: View {
                         
                         // Step Guide
                         VStack(spacing: 8) {
-                            Text(steps[currentStep - 1].title)
+                            Text(steps[min(currentStep - 1, steps.count - 1)].title)
                                 .font(.system(size: 28, weight: .bold, design: .rounded))
-                                .foregroundColor(steps[currentStep - 1].color)
+                                .foregroundColor(steps[min(currentStep - 1, steps.count - 1)].color)
                             
                             Button(action: {
                                 withAnimation(.spring(response: 0.3, dampingFraction: 0.7)) {
@@ -175,18 +162,26 @@ struct ArtisticPlanetView: View {
                                 )
                             }
                             
+                            // 只在第二步（Tree of Life）显示提示文字
+                            if currentStep == 2 {
+                                Text("This might be difficult")
+                                    .font(.system(size: 13, weight: .regular, design: .rounded))
+                                    .foregroundColor(.white.opacity(0.7))
+                                    .padding(.top, 4)
+                            }
+                            
                             if showTip {
-                            Text(steps[currentStep - 1].description)
-                                .font(.system(size: 17, weight: .regular, design: .rounded))
-                                .foregroundColor(.white.opacity(0.9))
-                                .multilineTextAlignment(.center)
-                                .padding(.horizontal, 40)
+                                Text(steps[min(currentStep - 1, steps.count - 1)].description)
+                                    .font(.system(size: 17, weight: .regular, design: .rounded))
+                                    .foregroundColor(.white.opacity(0.9))
+                                    .multilineTextAlignment(.center)
+                                    .padding(.horizontal, 40)
                                     .padding(.top, 8)
                                     .transition(.opacity.combined(with: .move(edge: .top)))
                             }
                             
                             // 添加示例图片
-                            if let exampleImage = UIImage(named: steps[currentStep - 1].example) {
+                            if let exampleImage = UIImage(named: steps[min(currentStep - 1, steps.count - 1)].example) {
                                 Image(uiImage: exampleImage)
                                     .resizable()
                                     .scaledToFit()
@@ -208,8 +203,8 @@ struct ArtisticPlanetView: View {
                                         .fill(
                                             LinearGradient(
                                                 colors: [
-                                                    steps[currentStep - 1].color.opacity(0.3),
-                                                    steps[currentStep - 1].color.opacity(0.1)
+                                                    steps[min(currentStep - 1, steps.count - 1)].color.opacity(0.3),
+                                                    steps[min(currentStep - 1, steps.count - 1)].color.opacity(0.1)
                                                 ],
                                                 startPoint: .top,
                                                 endPoint: .bottom
@@ -229,7 +224,7 @@ struct ArtisticPlanetView: View {
                             selectedTool: $selectedTool
                         )
                         .padding(.leading, 24)
-                        .onChange(of: selectedColor) { newColor in
+                        .onChange(of: selectedColor) { oldColor, newColor in
                             viewModel.selectedColor = newColor
                         }
                         
@@ -248,7 +243,7 @@ struct ArtisticPlanetView: View {
                                 brushSize: brushSize
                             )
                             .clipShape(RoundedRectangle(cornerRadius: 24))
-                            .onChange(of: canvasView.drawing) { newDrawing in
+                            .onChange(of: canvasView.drawing) { oldDrawing, newDrawing in
                                 print("🖌 Drawing updated in view")
                                 print("✏️ Strokes count: \(newDrawing.strokes.count)")
                                 print("📐 Bounds: \(newDrawing.bounds)")
@@ -453,11 +448,9 @@ struct ArtisticPlanetView: View {
                                     Button(action: {
                                         withAnimation(.spring(response: 0.3, dampingFraction: 0.8)) {
                                             viewModel.handleValidationContinue()
-                if viewModel.isDrawingValid {
-                                                currentStep += 1
-                                                selectedColor = getStepColor(step: currentStep)
-                                                canvasView.drawing = PKDrawing()  // 清空画板
-                                            }
+                                            currentStep += 1
+                                            selectedColor = getStepColor(step: currentStep)
+                                            canvasView.drawing = PKDrawing()  // 清空画板
                                         }
                                     }) {
                                         Text("Continue")
@@ -480,11 +473,11 @@ struct ArtisticPlanetView: View {
                                     // Skip 按钮（验证失败时显示，但在空绘画提示时不显示）
                                     Button(action: {
                                         // 保存当前绘画
-                            viewModel.saveDrawing(canvasView.drawing, forStep: currentStep)
+                                        viewModel.saveDrawing(canvasView.drawing, forStep: currentStep)
                                         // 更新UI
                                         withAnimation(.spring(response: 0.3, dampingFraction: 0.8)) {
-                            currentStep += 1
-                            selectedColor = getStepColor(step: currentStep)
+                                            currentStep += 1
+                                            selectedColor = getStepColor(step: currentStep)
                                             canvasView.drawing = PKDrawing()  // 清空画板
                                             viewModel.handleValidationDismiss()
                                         }
@@ -552,7 +545,7 @@ struct ArtisticPlanetView: View {
                     .transition(.opacity.animation(.easeInOut(duration: 0.2)))
                 }
             }
-            .onChange(of: viewModel.showValidationDialog) { newValue in
+            .onChange(of: viewModel.showValidationDialog) { oldValue, newValue in
                 if newValue {
                     withAnimation(.spring(response: 0.4, dampingFraction: 0.8)) {
                         viewModel.showValidationDialog = true
@@ -672,7 +665,7 @@ struct ArtisticPlanetView: View {
                     .transition(.opacity)
                 }
             }
-            .onChange(of: showCompletionDialog) { newValue in
+            .onChange(of: showCompletionDialog) { oldValue, newValue in
                 if newValue {
                     withAnimation(.spring(response: 0.4, dampingFraction: 0.8)) {
                         showCompletionDialog = true
@@ -682,42 +675,6 @@ struct ArtisticPlanetView: View {
         }
         .fullScreenCover(isPresented: $showArtisticCompletion) {
             ArtisticCompletionView(viewModel: viewModel)
-        }
-        .sheet(isPresented: $showDebugImage) {
-            ZStack {
-                Color.black.edgesIgnoringSafeArea(.all)
-                
-                VStack(spacing: 20) {
-                    if let image = viewModel.debugImage {
-                        ScrollView([.horizontal, .vertical]) {
-                            Image(uiImage: image)
-                                .resizable()
-                                .scaledToFit()
-                                .frame(width: 1024, height: 1024)
-                                .padding()
-                        }
-                    } else {
-                        Text("No debug image available")
-                            .foregroundColor(.white)
-                    }
-                    
-                    Text("ML Model Input Image")
-                        .font(.headline)
-                        .foregroundColor(.white)
-                    
-                    Button(action: {
-                        showDebugImage = false
-                    }) {
-                        Text("Close")
-                            .font(.system(size: 17, weight: .medium))
-                            .foregroundColor(.white)
-                            .padding(.horizontal, 24)
-                            .padding(.vertical, 12)
-                            .background(.ultraThinMaterial)
-                            .cornerRadius(20)
-                    }
-                }
-            }
         }
     }
     

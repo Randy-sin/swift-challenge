@@ -93,6 +93,8 @@ struct SceneMenuView: View {
     @State private var showArtisticPlanet = false
     @State private var showOceanusGuide = false
     @State private var showOceanusAR = false
+    @State private var showPsycheDialogue = false
+    @State private var showAndromedaGuide = false
     @StateObject private var artisticViewModel = ArtisticPlanetViewModel()
     
     var body: some View {
@@ -177,19 +179,23 @@ struct SceneMenuView: View {
                         )
                     }
                     
-                    // 第四个场景（待解锁）
-                    SceneCard(
-                        title: "Coming Soon",
-                        subtitle: "Your next journey awaits",
-                        description: "Complete previous journey to unlock",
-                        isLocked: true,
-                        gradientColors: [
-                            Color.white.opacity(0.4),
-                            Color.white.opacity(0.2),
-                            Color.clear
-                        ],
-                        backgroundImage: nil
-                    )
+                    // 第四个场景
+                    Button {
+                        showAndromedaGuide = true
+                    } label: {
+                        SceneCard(
+                            title: "Andromeda Guide",
+                            subtitle: "Journey Through the Stars",
+                            description: "Share your thoughts with a caring celestial companion",
+                            isLocked: false,
+                            gradientColors: [
+                                Color(red: 0.6, green: 0.4, blue: 0.8).opacity(0.6),
+                                Color(red: 0.4, green: 0.2, blue: 0.6).opacity(0.4),
+                                Color.clear
+                            ],
+                            backgroundImage: "Andromeda"
+                        )
+                    }
                 }
                 .padding(.horizontal, 30)
                 
@@ -229,6 +235,15 @@ struct SceneMenuView: View {
         }
         .fullScreenCover(isPresented: $showOceanusAR) {
             OceanusARScene()
+        }
+        .fullScreenCover(isPresented: $showAndromedaGuide) {
+            AndromedaGuideView(isShowingGuide: $showAndromedaGuide, startChat: {
+                showAndromedaGuide = false
+                showPsycheDialogue = true
+            })
+        }
+        .fullScreenCover(isPresented: $showPsycheDialogue) {
+            PsycheDialogueView()
         }
     }
 }
