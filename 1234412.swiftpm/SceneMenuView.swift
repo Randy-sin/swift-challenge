@@ -184,7 +184,7 @@ struct SceneMenuView: View {
                         showAndromedaGuide = true
                     } label: {
                         SceneCard(
-                            title: "Andromeda Guide",
+                            title: "Andromeda",
                             subtitle: "Journey Through the Stars",
                             description: "Share your thoughts with a caring celestial companion",
                             isLocked: false,

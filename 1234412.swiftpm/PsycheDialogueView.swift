@@ -92,14 +92,39 @@ struct MessageBubble: View {
             .padding(.vertical, 10)
             .background(
                 message.isUser
-                    ? Color(red: 0.6, green: 0.4, blue: 0.8).opacity(0.8)
-                    : Color.white.opacity(0.15)
+                    ? LinearGradient(
+                        colors: [
+                            Color(red: 0.6, green: 0.4, blue: 0.8).opacity(0.9),
+                            Color(red: 0.5, green: 0.3, blue: 0.7).opacity(0.8)
+                        ],
+                        startPoint: .topLeading,
+                        endPoint: .bottomTrailing
+                    )
+                    : LinearGradient(
+                        colors: [
+                            Color.white.opacity(0.2),
+                            Color.white.opacity(0.1)
+                        ],
+                        startPoint: .topLeading,
+                        endPoint: .bottomTrailing
+                    )
             )
             .clipShape(RoundedRectangle(cornerRadius: 18))
             .overlay(
                 RoundedRectangle(cornerRadius: 18)
-                    .stroke(Color.white.opacity(0.2), lineWidth: 1)
+                    .stroke(
+                        LinearGradient(
+                            colors: [
+                                Color.white.opacity(0.3),
+                                Color.white.opacity(0.1)
+                            ],
+                            startPoint: .topLeading,
+                            endPoint: .bottomTrailing
+                        ),
+                        lineWidth: 1
+                    )
             )
+            .shadow(color: message.isUser ? Color(red: 0.6, green: 0.4, blue: 0.8).opacity(0.3) : Color.white.opacity(0.1), radius: 8, x: 0, y: 4)
             .foregroundColor(.white)
             
             if !message.isUser {
@@ -123,6 +148,7 @@ struct PsycheDialogueView: View {
     @State private var dialogueCount = 0
     @State private var showingJourneyHint = false
     @State private var arrowOffset: CGFloat = 0
+    @State private var showingCompletion = false
     
     // Welcome messages
     private let welcomeMessages = [
@@ -221,18 +247,22 @@ struct PsycheDialogueView: View {
     
     var body: some View {
         ZStack {
-            // Background
+            // 纯黑色背景
             Color.black.edgesIgnoringSafeArea(.all)
             
-            // Starfield background
+            // 粒子效果背景
             if showingStars {
-                StarfieldView()
+                // 添加粒子效果
+                PsycheParticleView()
                     .edgesIgnoringSafeArea(.all)
+                    .opacity(0.6)
+                    .colorMultiply(Color(red: 0.6, green: 0.4, blue: 0.8))  // 添加紫色调
+                    .allowsHitTesting(false)  // 确保不会影响下面视图的交互
             }
             
             // Main content
             VStack(spacing: 0) {
-                // Top bar
+                // 更新顶部栏背景为半透明效果
                 HStack {
                     Button(action: {
                         dismiss()
@@ -241,7 +271,7 @@ struct PsycheDialogueView: View {
                             .font(.system(size: 20, weight: .medium))
                             .foregroundColor(.white)
                             .frame(width: 44, height: 44)
-                            .background(Color.white.opacity(0.1))
+                            .background(Color.white.opacity(0.15))
                             .clipShape(Circle())
                     }
                     
@@ -256,60 +286,47 @@ struct PsycheDialogueView: View {
                     HStack(spacing: 16) {
                         // Journey hint
                         if showingJourneyHint {
-                            HStack(spacing: 8) {
-                                Image(systemName: "sparkles.star.filled")
-                                    .font(.system(size: 16))
-                                Text("View Your Constellation")
-                                    .font(.system(size: 14, weight: .medium))
-                                Image(systemName: "arrow.right")
-                                    .font(.system(size: 14, weight: .medium))
-                                    .offset(x: arrowOffset)
-                            }
-                            .foregroundColor(.white)
-                            .padding(.horizontal, 12)
-                            .padding(.vertical, 8)
-                            .background(
-                                RoundedRectangle(cornerRadius: 16)
-                                    .fill(
-                                        LinearGradient(
-                                            colors: [
-                                                Color(red: 0.6, green: 0.4, blue: 0.8).opacity(0.3),
-                                                Color(red: 0.4, green: 0.2, blue: 0.6).opacity(0.3)
-                                            ],
-                                            startPoint: .topLeading,
-                                            endPoint: .bottomTrailing
-                                        )
-                                    )
-                                    .overlay(
-                                        RoundedRectangle(cornerRadius: 16)
-                                            .strokeBorder(
-                                                LinearGradient(
-                                                    colors: [.white.opacity(0.6), .white.opacity(0.2)],
-                                                    startPoint: .topLeading,
-                                                    endPoint: .bottomTrailing
-                                                ),
-                                                lineWidth: 1
-                                            )
-                                    )
-                            )
-                            .overlay(
-                                Circle()
-                                    .fill(Color.white.opacity(0.1))
-                                    .frame(width: 6, height: 6)
-                                    .blur(radius: 1)
-                                    .offset(x: -4, y: -4)
-                            )
-                            .transition(.asymmetric(
-                                insertion: .scale(scale: 0.8).combined(with: .opacity),
-                                removal: .scale(scale: 1.1).combined(with: .opacity)
-                            ))
-                            .onAppear {
-                                withAnimation(
-                                    .easeInOut(duration: 0.8)
-                                    .repeatForever(autoreverses: true)
-                                ) {
-                                    arrowOffset = 4
+                            Button(action: {
+                                showingEmotionAnalysis = true
+                            }) {
+                                HStack(spacing: 8) {
+                                    Text("View Your Constellation")
+                                        .font(.system(size: 14, weight: .medium))
+                                    Image(systemName: "arrow.right")
+                                        .font(.system(size: 14))
+                                        .offset(x: arrowOffset)
                                 }
+                                .foregroundColor(.white)
+                                .padding(.horizontal, 12)
+                                .padding(.vertical, 8)
+                                .background(
+                                    RoundedRectangle(cornerRadius: 16)
+                                        .fill(
+                                            LinearGradient(
+                                                colors: [
+                                                    Color(red: 0.6, green: 0.4, blue: 0.8).opacity(0.3),
+                                                    Color(red: 0.4, green: 0.2, blue: 0.6).opacity(0.3)
+                                                ],
+                                                startPoint: .topLeading,
+                                                endPoint: .bottomTrailing
+                                            )
+                                        )
+                                        .overlay(
+                                            RoundedRectangle(cornerRadius: 16)
+                                                .strokeBorder(
+                                                    LinearGradient(
+                                                        colors: [.white.opacity(0.6), .white.opacity(0.2)],
+                                                        startPoint: .topLeading,
+                                                        endPoint: .bottomTrailing
+                                                    ),
+                                                    lineWidth: 1
+                                                )
+                                        )
+                                )
+                                .transition(.asymmetric(
+                                    insertion: .scale(scale: 0.8).combined(with: .opacity),
+                                    removal: .scale(scale: 1.1).combined(with: .opacity)
+                                ))
                             }
                         }
                         
@@ -436,16 +453,68 @@ struct PsycheDialogueView: View {
                 
                 // Current emotion indicator
                 if let emotion = currentEmotion {
-                    HStack {
-                        Image(systemName: "heart.fill")
-                            .foregroundColor(emotionColor(emotion))
-                        Text("Current Emotion: \(emotion.description)")
-                            .foregroundColor(.white)
+                    HStack(spacing: 16) {
+                        HStack {
+                            Image(systemName: "heart.fill")
+                                .foregroundColor(emotionColor(emotion))
+                            Text("Current Emotion: \(emotion.description)")
+                                .foregroundColor(.white)
+                        }
+                        .padding(.vertical, 8)
+                        .padding(.horizontal, 16)
+                        .background(Color.white.opacity(0.1))
+                        .cornerRadius(20)
+                        
+                        // Journey to Stars button
+                        if dialogueCount >= 3 {
+                            Button(action: {
+                                showingCompletion = true
+                            }) {
+                                HStack(spacing: 8) {
+                                    Image(systemName: "hand.tap.fill")
+                                        .font(.system(size: 14))
+                                        .foregroundColor(.white.opacity(0.8))
+                                    Text("Journey to the Stars")
+                                        .font(.system(size: 14, weight: .medium))
+                                }
+                                .foregroundColor(.white)
+                                .padding(.horizontal, 16)
+                                .padding(.vertical, 8)
+                                .background(
+                                    RoundedRectangle(cornerRadius: 20)
+                                        .fill(
+                                            LinearGradient(
+                                                colors: [
+                                                    Color(red: 0.6, green: 0.4, blue: 0.8).opacity(0.3),
+                                                    Color(red: 0.4, green: 0.2, blue: 0.6).opacity(0.3)
+                                                ],
+                                                startPoint: .topLeading,
+                                                endPoint: .bottomTrailing
+                                            )
+                                        )
+                                        .overlay(
+                                            RoundedRectangle(cornerRadius: 20)
+                                                .strokeBorder(
+                                                    LinearGradient(
+                                                        colors: [.white.opacity(0.6), .white.opacity(0.2)],
+                                                        startPoint: .topLeading,
+                                                        endPoint: .bottomTrailing
+                                                    ),
+                                                    lineWidth: 1
+                                                )
+                                        )
+                                )
+                                .overlay(
+                                    Circle()
+                                        .fill(Color.white.opacity(0.2))
+                                        .frame(width: 4, height: 4)
+                                        .blur(radius: 1)
+                                        .offset(x: -8, y: -8)
+                                )
+                            }
+                            .transition(.scale.combined(with: .opacity))
+                        }
                     }
-                    .padding(.vertical, 8)
-                    .padding(.horizontal, 16)
-                    .background(Color.white.opacity(0.1))
-                    .cornerRadius(20)
                     .padding(.vertical, 8)
                 }
                 
@@ -497,6 +566,9 @@ struct PsycheDialogueView: View {
         }
         .sheet(isPresented: $showingEmotionAnalysis) {
             EmotionAnalysisView()
+        }
+        .fullScreenCover(isPresented: $showingCompletion) {
+            AndromedaCompletionView()
         }
         .onAppear {
             withAnimation(.easeIn(duration: 1.0)) {
