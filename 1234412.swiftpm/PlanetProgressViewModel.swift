@@ -7,31 +7,11 @@ final class PlanetProgressViewModel: ObservableObject {
     @Published private(set) var unlockedPlanets: Set<PlanetType>
     @Published private(set) var completedPlanets: Set<PlanetType>
     
-    // MARK: - Constants
-    private let userDefaultsKey = "UnlockedPlanets"
-    private let completedPlanetsKey = "CompletedPlanets"
-    
     // MARK: - Initialization
     init() {
-        // 从 UserDefaults 读取已解锁的星球
-        if let savedUnlockedPlanets = UserDefaults.standard.array(forKey: userDefaultsKey) as? [Int],
-           let savedCompletedPlanets = UserDefaults.standard.array(forKey: completedPlanetsKey) as? [Int] {
-            // 转换保存的原始值为 PlanetType
-            self.unlockedPlanets = Set(savedUnlockedPlanets.compactMap { PlanetType(rawValue: $0) })
-            self.completedPlanets = Set(savedCompletedPlanets.compactMap { PlanetType(rawValue: $0) })
-            
-            // 确保 Venus 始终是解锁的
-            if !self.unlockedPlanets.contains(.venus) {
-                self.unlockedPlanets.insert(.venus)
-                self.saveUnlockedPlanets()
-            }
-        } else {
-            // 首次启动时只解锁 Venus
-            self.unlockedPlanets = [.venus]
-            self.completedPlanets = []
-            self.saveUnlockedPlanets()
-            self.saveCompletedPlanets()
-        }
+        // 初始化时只解锁 Venus
+        self.unlockedPlanets = [.venus]
+        self.completedPlanets = []
     }
     
     // MARK: - Planet Type Definition
@@ -83,14 +63,12 @@ final class PlanetProgressViewModel: ObservableObject {
     /// 解锁指定星球
     func unlockPlanet(_ planet: PlanetType) {
         unlockedPlanets.insert(planet)
-        saveUnlockedPlanets()
     }
     
     /// 锁定指定星球
     func lockPlanet(_ planet: PlanetType) {
         if planet != .venus {  // Prevent Venus from being locked
             unlockedPlanets.remove(planet)
-            saveUnlockedPlanets()
         }
     }
     
@@ -98,7 +76,6 @@ final class PlanetProgressViewModel: ObservableObject {
     func lockPlanets(_ planets: Set<PlanetType>) {
         let planetsToLock = planets.filter { $0 != .venus }  // Prevent Venus from being locked
         unlockedPlanets.subtract(planetsToLock)
-        saveUnlockedPlanets()
     }
     
     /// 检查星球是否已完成
@@ -109,7 +86,6 @@ final class PlanetProgressViewModel: ObservableObject {
     /// 标记星球为已完成
     func markPlanetAsCompleted(_ planet: PlanetType) {
         completedPlanets.insert(planet)
-        saveCompletedPlanets()
         
         // 完成后解锁下一个星球
         if let next = planet.nextPlanet {
@@ -121,15 +97,12 @@ final class PlanetProgressViewModel: ObservableObject {
     func resetAllPlanets() {
         unlockedPlanets = [.venus]
         completedPlanets = []
-        saveUnlockedPlanets()
-        saveCompletedPlanets()
     }
     
     /// 解锁指定星球之后的所有星球
     func unlockPlanetsAfter(_ planet: PlanetType) {
         let planetsToUnlock = PlanetType.allCases.filter { $0.rawValue > planet.rawValue }
         unlockedPlanets.formUnion(planetsToUnlock)
-        saveUnlockedPlanets()
     }
     
     /// 解锁下一个星球
@@ -147,25 +120,5 @@ final class PlanetProgressViewModel: ObservableObject {
             }
         }
         return nil
-    }
-    
-    // MARK: - Private Methods
-    
-    /// 保存解锁状态到 UserDefaults
-    private func saveUnlockedPlanets() {
-        let planetsArray = unlockedPlanets.map { $0.rawValue }
-        UserDefaults.standard.set(planetsArray, forKey: userDefaultsKey)
-    }
-    
-    /// 保存已完成状态到 UserDefaults
-    private func saveCompletedPlanets() {
-        let planetsArray = completedPlanets.map { $0.rawValue }
-        UserDefaults.standard.set(planetsArray, forKey: completedPlanetsKey)
-    }
-    
-    /// 重置所有解锁状态（仅用于测试）
-    func resetProgress() {
-        unlockedPlanets = [.venus]
-        saveUnlockedPlanets()
     }
 } 

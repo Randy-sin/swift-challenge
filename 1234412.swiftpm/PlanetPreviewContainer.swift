@@ -110,7 +110,7 @@ struct PlanetPreviewContainer: View {
                             } else {
                                 VStack(spacing: 2) {
                                     Planet3DSceneView(viewModel: venusViewModel)
-                                        .frame(width: 120, height: 120)
+                                        .frame(width: 100, height: 100)
                                         .scaleEffect(1.2)
                                         .offset(y: -6)
                                     
@@ -145,7 +145,7 @@ struct PlanetPreviewContainer: View {
                             } else {
                                 VStack(spacing: 2) {
                                     Planet3DSceneView(viewModel: artisticViewModel)
-                                        .frame(width: 120, height: 120)
+                                        .frame(width: 100, height: 100)
                                         .scaleEffect(1.2)
                                         .offset(y: -6)
                                     
@@ -180,7 +180,7 @@ struct PlanetPreviewContainer: View {
                             } else {
                                 VStack(spacing: 2) {
                                     Planet3DSceneView(viewModel: oceanusViewModel)
-                                        .frame(width: 120, height: 120)
+                                        .frame(width: 100, height: 100)
                                         .scaleEffect(1.2)
                                         .offset(y: -6)
                                     
@@ -215,7 +215,7 @@ struct PlanetPreviewContainer: View {
                             } else {
                                 VStack(spacing: 2) {
                                     Planet3DSceneView(viewModel: andromedaViewModel)
-                                        .frame(width: 120, height: 120)
+                                        .frame(width: 100, height: 100)
                                         .scaleEffect(1.2)
                                         .offset(y: -6)
                                     
