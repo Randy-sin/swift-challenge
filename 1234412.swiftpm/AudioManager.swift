@@ -5,10 +5,11 @@ import AVFoundation
 final class AudioManager: ObservableObject, @unchecked Sendable {
     static let shared = AudioManager()
     private var audioPlayer: AVAudioPlayer?
-    @Published private(set) var isPlaying = false
+    @Published private(set) var isPlaying = true  // 默认为 true
     
     private init() {
         prepareAudio()
+        play()  // 初始化时自动播放
     }
     
     private func prepareAudio() {
