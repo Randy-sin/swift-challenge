@@ -3,7 +3,7 @@ import PencilKit
 
 struct ArtisticPlanetView: View {
     @Environment(\.dismiss) private var dismiss
-    @StateObject private var viewModel = ArtisticPlanetViewModel()
+    @EnvironmentObject var viewModel: ArtisticPlanetViewModel
     @State private var canvasView = PKCanvasView()
     @State private var selectedColor: DrawingColor = .blue
     @State private var selectedTool: DrawingTool = .pen

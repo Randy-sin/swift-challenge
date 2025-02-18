@@ -154,7 +154,7 @@ struct PsycheDialogueView: View {
     private let welcomeMessages = [
         "Welcome to Andromeda Dialogue, your emotional sanctuary in the heart of our neighboring galaxy.",
         "I will listen to your words and understand your feelings.",
-        "Feel free to share your thoughts with me."
+        "Feel free to share your thoughts with me. After three meaningful exchanges, we'll embark on the next phase of our cosmic journey together."
     ]
     
     // 预设问题示例
@@ -286,48 +286,44 @@ struct PsycheDialogueView: View {
                     HStack(spacing: 16) {
                         // Journey hint
                         if showingJourneyHint {
-                            Button(action: {
-                                showingEmotionAnalysis = true
-                            }) {
-                                HStack(spacing: 8) {
-                                    Text("View Your Constellation")
-                                        .font(.system(size: 14, weight: .medium))
-                                    Image(systemName: "arrow.right")
-                                        .font(.system(size: 14))
-                                        .offset(x: arrowOffset)
-                                }
-                                .foregroundColor(.white)
-                                .padding(.horizontal, 12)
-                                .padding(.vertical, 8)
-                                .background(
-                                    RoundedRectangle(cornerRadius: 16)
-                                        .fill(
-                                            LinearGradient(
-                                                colors: [
-                                                    Color(red: 0.6, green: 0.4, blue: 0.8).opacity(0.3),
-                                                    Color(red: 0.4, green: 0.2, blue: 0.6).opacity(0.3)
-                                                ],
-                                                startPoint: .topLeading,
-                                                endPoint: .bottomTrailing
-                                            )
-                                        )
-                                        .overlay(
-                                            RoundedRectangle(cornerRadius: 16)
-                                                .strokeBorder(
-                                                    LinearGradient(
-                                                        colors: [.white.opacity(0.6), .white.opacity(0.2)],
-                                                        startPoint: .topLeading,
-                                                        endPoint: .bottomTrailing
-                                                    ),
-                                                    lineWidth: 1
-                                                )
-                                        )
-                                )
-                                .transition(.asymmetric(
-                                    insertion: .scale(scale: 0.8).combined(with: .opacity),
-                                    removal: .scale(scale: 1.1).combined(with: .opacity)
-                                ))
+                            HStack(spacing: 8) {
+                                Text("View Your Constellation")
+                                    .font(.system(size: 14, weight: .medium))
+                                Image(systemName: "arrow.right")
+                                    .font(.system(size: 14))
+                                    .offset(x: arrowOffset)
                             }
+                            .foregroundColor(.white)
+                            .padding(.horizontal, 12)
+                            .padding(.vertical, 8)
+                            .background(
+                                RoundedRectangle(cornerRadius: 16)
+                                    .fill(
+                                        LinearGradient(
+                                            colors: [
+                                                Color(red: 0.6, green: 0.4, blue: 0.8).opacity(0.3),
+                                                Color(red: 0.4, green: 0.2, blue: 0.6).opacity(0.3)
+                                            ],
+                                            startPoint: .topLeading,
+                                            endPoint: .bottomTrailing
+                                        )
+                                    )
+                                    .overlay(
+                                        RoundedRectangle(cornerRadius: 16)
+                                            .strokeBorder(
+                                                LinearGradient(
+                                                    colors: [.white.opacity(0.6), .white.opacity(0.2)],
+                                                    startPoint: .topLeading,
+                                                    endPoint: .bottomTrailing
+                                                ),
+                                                lineWidth: 1
+                                            )
+                                    )
+                            )
+                            .transition(.asymmetric(
+                                insertion: .scale(scale: 0.8).combined(with: .opacity),
+                                removal: .scale(scale: 1.1).combined(with: .opacity)
+                            ))
                         }
                         
                         Button(action: {

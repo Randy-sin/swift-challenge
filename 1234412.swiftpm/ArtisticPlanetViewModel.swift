@@ -361,8 +361,8 @@ final class ArtisticPlanetViewModel: ObservableObject {
         directionalLight2.position = SCNVector3(x: -5, y: -5, z: -5)
         scene.rootNode.addChildNode(directionalLight2)
         
-        // 添加旋转动画
-        let rotation = SCNAction.rotateBy(x: 0, y: 2 * .pi, z: 0, duration: 20)
+        // 添加更快的旋转动画
+        let rotation = SCNAction.rotateBy(x: 0, y: 2 * .pi, z: 0, duration: 8)  // 从20秒改为8秒
         let repeatRotation = SCNAction.repeatForever(rotation)
         node.runAction(repeatRotation)
         
@@ -674,5 +674,14 @@ final class ArtisticPlanetViewModel: ObservableObject {
     
     func handleValidationDismiss() {
         showValidationDialog = false
+    }
+    
+    // 添加设置初始纹理的方法
+    func setupInitialTexture(_ texture: UIImage) {
+        guard let material = planetNode?.geometry?.materials.first else { return }
+        material.diffuse.contents = texture
+        material.normal.contents = texture
+        material.emission.contents = texture
+        material.emission.intensity = 0.5
     }
 } 

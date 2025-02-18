@@ -2,90 +2,10 @@ import SwiftUI
 import SpriteKit
 import PencilKit
 
-struct SceneCard: View {
-    let title: String
-    let subtitle: String
-    let description: String
-    let isLocked: Bool
-    let gradientColors: [Color]
-    let backgroundImage: String?
-    
-    var body: some View {
-        VStack(alignment: .leading, spacing: 0) {  // 改为 spacing: 0
-            Spacer().frame(height: 25)  // 增加顶部间距
-            
-            // 标题区域
-            VStack(alignment: .leading, spacing: 12) {  // 增加间距
-                Text(title)
-                    .font(.system(size: 28, weight: .bold, design: .rounded))
-                    .foregroundColor(.white)
-                
-                Text(subtitle)
-                    .font(.system(size: 18, weight: .regular, design: .rounded))
-                    .foregroundColor(.white.opacity(0.7))
-                
-                Text(description)
-                    .font(.system(size: 16, weight: .regular, design: .rounded))
-                    .foregroundColor(.white.opacity(0.6))
-                    .padding(.top, 4)
-            }
-            .padding(.horizontal, 30)  // 添加水平内边距
-            
-            Spacer()
-            
-            // 状态指示
-            HStack {
-                if isLocked {
-                    Image(systemName: "lock.fill")
-                        .font(.system(size: 18))
-                        .foregroundColor(.white.opacity(0.6))
-                } else {
-                    Image(systemName: "chevron.right.circle.fill")
-                        .font(.system(size: 22))
-                        .foregroundColor(.white)
-                }
-                
-                Spacer()
-            }
-            .padding(.horizontal, 30)  // 添加水平内边距
-            .padding(.bottom, 25)  // 减少底部间距
-        }
-        .frame(width: 400, height: 180)
-        .background(
-            ZStack {
-                if let bgImage = backgroundImage {
-                    Image(bgImage)
-                        .resizable()
-                        .aspectRatio(contentMode: .fill)
-                        .frame(width: 400, height: 180)
-                        .clipped()
-                        .opacity(0.3)
-                }
-                
-                RoundedRectangle(cornerRadius: 28)
-                    .fill(Color.white.opacity(0.15))
-                
-                RoundedRectangle(cornerRadius: 28)
-                    .stroke(Color.white.opacity(0.2), lineWidth: 1)
-                
-                // 渐变光效
-                RoundedRectangle(cornerRadius: 28)
-                    .fill(
-                        LinearGradient(
-                            colors: gradientColors,
-                            startPoint: .topLeading,
-                            endPoint: .bottomTrailing
-                        )
-                    )
-                    .blendMode(.plusLighter)
-            }
-        )
-        .clipShape(RoundedRectangle(cornerRadius: 28))
-        .shadow(color: .black.opacity(0.2), radius: 15, x: 0, y: 5)
-    }
-}
-
 struct SceneMenuView: View {
+    @StateObject private var progressViewModel = PlanetProgressViewModel()
+    @StateObject private var artisticViewModel = ArtisticPlanetViewModel()
+    
     @State private var selectedScene: Int? = nil
     @State private var showSmileDetection = false
     @State private var showVenusGuide = false
@@ -95,7 +15,6 @@ struct SceneMenuView: View {
     @State private var showOceanusAR = false
     @State private var showPsycheDialogue = false
     @State private var showAndromedaGuide = false
-    @StateObject private var artisticViewModel = ArtisticPlanetViewModel()
     
     var body: some View {
         ZStack {
@@ -112,88 +31,145 @@ struct SceneMenuView: View {
             
             // 粒子背景
             EmotionParticleView()
+                .edgesIgnoringSafeArea(.all)
             
+            // 主要内容
             VStack(spacing: 40) {
-                // 标题
-                Text("Choose Your Journey")
-                    .font(.system(size: 38, weight: .bold, design: .rounded))
-                    .foregroundColor(.white)
-                    .padding(.top, 40)
+                ZStack {
+                    // 标题居中
+                    Text("Choose Your Journey")
+                        .font(.system(size: 38, weight: .bold, design: .rounded))
+                        .foregroundColor(.white)
+                    
+                    // 右侧按钮组
+                    HStack(spacing: 15) {
+                        // 音乐控制按钮
+                        AudioPlayerView()
+                        
+                        // 设置按钮
+                        Menu {
+                            Button(action: {
+                                progressViewModel.resetAllPlanets()
+                            }) {
+                                Label("Reset Journey", systemImage: "arrow.counterclockwise")
+                                    .foregroundColor(.white)
+                            }
+                            
+                            Menu("Unlock Celestial Paths") {
+                                ForEach(PlanetProgressViewModel.PlanetType.allCases, id: \.self) { planet in
+                                    if !progressViewModel.isPlanetLocked(planet) {
+                                        Button(action: {
+                                            progressViewModel.unlockPlanetsAfter(planet)
+                                        }) {
+                                            Label("Beyond \(planet.name)", systemImage: "sparkles")
+                                        }
+                                    }
+                                }
+                            }
+                        } label: {
+                            Image(systemName: "gearshape.fill")
+                                .font(.system(size: 24))
+                                .foregroundColor(.white)
+                                .padding(10)
+                                .background(Color(red: 0.2, green: 0.2, blue: 0.3).opacity(0.6))
+                                .clipShape(Circle())
+                        }
+                    }
+                    .frame(maxWidth: .infinity, alignment: .trailing)
+                    .padding(.horizontal, 30)
+                }
+                .padding(.top, 40)
                 
                 // 场景网格
                 LazyVGrid(columns: [
                     GridItem(.flexible(), spacing: 30),
                     GridItem(.flexible(), spacing: 30)
                 ], spacing: 30) {
-                    // 第一个场景：微笑检测
+                    // Venus 星球
                     Button {
-                        showVenusGuide = true
+                        if !progressViewModel.isPlanetLocked(.venus) {
+                            showVenusGuide = true
+                        }
                     } label: {
                         SceneCard(
-                            title: "Venus Radiance",
+                            title: PlanetProgressViewModel.PlanetType.venus.name,
                             subtitle: "Let Your Smile Shine Like Venus",
                             description: "Transform your emotions through the brightest smile in our solar system",
-                            isLocked: false,
+                            isLocked: progressViewModel.isPlanetLocked(.venus),
+                            unlockCondition: PlanetProgressViewModel.PlanetType.venus.unlockCondition,
                             gradientColors: [
                                 Color(red: 1.0, green: 0.8, blue: 0.4).opacity(0.6),
                                 Color(red: 1.0, green: 0.6, blue: 0.2).opacity(0.4),
                                 Color.clear
                             ],
-                            backgroundImage: "venusbg"
+                            backgroundImage: "venusbg",
+                            onTap: { showVenusGuide = true }
                         )
                     }
                     
-                    // 第二个场景：艺术星球
+                    // Artistic 星球
                     Button {
-                        showArtisticGuide = true
+                        if !progressViewModel.isPlanetLocked(.artistic) {
+                            showArtisticGuide = true
+                        }
                     } label: {
                         SceneCard(
-                            title: "Artistic Planet",
+                            title: PlanetProgressViewModel.PlanetType.artistic.name,
                             subtitle: "Paint Your Emotions in Space",
                             description: "Create your own celestial world with colors of feelings",
-                            isLocked: false,
+                            isLocked: progressViewModel.isPlanetLocked(.artistic),
+                            unlockCondition: PlanetProgressViewModel.PlanetType.artistic.unlockCondition,
                             gradientColors: [
                                 Color(red: 0.4, green: 0.8, blue: 1.0).opacity(0.6),
                                 Color(red: 0.2, green: 0.6, blue: 0.8).opacity(0.4),
                                 Color.clear
                             ],
-                            backgroundImage: "artisticplanet"
+                            backgroundImage: "artisticplanet",
+                            onTap: { showArtisticGuide = true }
                         )
                     }
                     
-                    // 第三个场景：Oceanus
+                    // Oceanus 星球
                     Button {
-                        showOceanusGuide = true
+                        if !progressViewModel.isPlanetLocked(.oceanus) {
+                            showOceanusGuide = true
+                        }
                     } label: {
                         SceneCard(
-                            title: "Oceanus",
+                            title: PlanetProgressViewModel.PlanetType.oceanus.name,
                             subtitle: "Breathe with the Ocean",
                             description: "Discover inner peace through the rhythm of the waves",
-                            isLocked: false,
+                            isLocked: progressViewModel.isPlanetLocked(.oceanus),
+                            unlockCondition: PlanetProgressViewModel.PlanetType.oceanus.unlockCondition,
                             gradientColors: [
                                 Color(red: 0.2, green: 0.6, blue: 0.9).opacity(0.6),
                                 Color(red: 0.1, green: 0.4, blue: 0.8).opacity(0.4),
                                 Color.clear
                             ],
-                            backgroundImage: "oceanusbg"
+                            backgroundImage: "oceanusbg",
+                            onTap: { showOceanusGuide = true }
                         )
                     }
                     
-                    // 第四个场景
+                    // Andromeda 星球
                     Button {
-                        showAndromedaGuide = true
+                        if !progressViewModel.isPlanetLocked(.andromeda) {
+                            showAndromedaGuide = true
+                        }
                     } label: {
                         SceneCard(
-                            title: "Andromeda",
+                            title: PlanetProgressViewModel.PlanetType.andromeda.name,
                             subtitle: "Journey Through the Stars",
                             description: "Share your thoughts with a caring celestial companion",
-                            isLocked: false,
+                            isLocked: progressViewModel.isPlanetLocked(.andromeda),
+                            unlockCondition: PlanetProgressViewModel.PlanetType.andromeda.unlockCondition,
                             gradientColors: [
                                 Color(red: 0.6, green: 0.4, blue: 0.8).opacity(0.6),
                                 Color(red: 0.4, green: 0.2, blue: 0.6).opacity(0.4),
                                 Color.clear
                             ],
-                            backgroundImage: "Andromeda"
+                            backgroundImage: "Andromeda",
+                            onTap: { showAndromedaGuide = true }
                         )
                     }
                 }
@@ -201,13 +177,14 @@ struct SceneMenuView: View {
                 
                 Spacer()
                 
-                // 底部提示
-                Text("Complete each journey to unlock the next")
-                    .font(.system(size: 16, weight: .regular, design: .rounded))
-                    .foregroundColor(.white.opacity(0.6))
-                    .padding(.bottom, 30)
+                // 星球预览容器
+                PlanetPreviewContainer()
+                    .frame(height: 150)
+                    .environmentObject(artisticViewModel)
+                    .environmentObject(progressViewModel)
             }
         }
+        .preferredColorScheme(.dark)
         .fullScreenCover(isPresented: $showVenusGuide) {
             VenusGuideView(isShowingGuide: $showVenusGuide, startSmileDetection: {
                 showVenusGuide = false
@@ -216,6 +193,11 @@ struct SceneMenuView: View {
         }
         .fullScreenCover(isPresented: $showSmileDetection) {
             SmileDetectionView()
+                .onDisappear {
+                    // Venus 完成后标记为已完成并解锁 Artistic
+                    progressViewModel.markPlanetAsCompleted(.venus)
+                    AudioManager.shared.play()
+                }
         }
         .fullScreenCover(isPresented: $showArtisticGuide) {
             ArtisticGuideView(isShowingGuide: $showArtisticGuide, startDrawing: {
@@ -226,6 +208,10 @@ struct SceneMenuView: View {
         .fullScreenCover(isPresented: $showArtisticPlanet) {
             ArtisticPlanetView()
                 .environmentObject(artisticViewModel)
+                .onDisappear {
+                    // Artistic 完成后标记为已完成并解锁 Oceanus
+                    progressViewModel.markPlanetAsCompleted(.artistic)
+                }
         }
         .fullScreenCover(isPresented: $showOceanusGuide) {
             OceanusGuideView(isShowingGuide: $showOceanusGuide, startBreathing: {
@@ -235,6 +221,10 @@ struct SceneMenuView: View {
         }
         .fullScreenCover(isPresented: $showOceanusAR) {
             OceanusARScene()
+                .onDisappear {
+                    // Oceanus 完成后标记为已完成并解锁 Andromeda
+                    progressViewModel.markPlanetAsCompleted(.oceanus)
+                }
         }
         .fullScreenCover(isPresented: $showAndromedaGuide) {
             AndromedaGuideView(isShowingGuide: $showAndromedaGuide, startChat: {
@@ -246,6 +236,10 @@ struct SceneMenuView: View {
             PsycheDialogueView()
         }
     }
+}
+
+#Preview {
+    SceneMenuView()
 }
 
 // End of file

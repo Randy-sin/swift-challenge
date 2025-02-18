@@ -5,15 +5,33 @@ import Combine
 final class PlanetProgressViewModel: ObservableObject {
     // MARK: - Published Properties
     @Published private(set) var unlockedPlanets: Set<PlanetType>
+    @Published private(set) var completedPlanets: Set<PlanetType>
     
     // MARK: - Constants
     private let userDefaultsKey = "UnlockedPlanets"
+    private let completedPlanetsKey = "CompletedPlanets"
     
     // MARK: - Initialization
     init() {
-        // 每次启动时只解锁 Venus
-        self.unlockedPlanets = [.venus]
-        self.saveUnlockedPlanets()
+        // 从 UserDefaults 读取已解锁的星球
+        if let savedUnlockedPlanets = UserDefaults.standard.array(forKey: userDefaultsKey) as? [Int],
+           let savedCompletedPlanets = UserDefaults.standard.array(forKey: completedPlanetsKey) as? [Int] {
+            // 转换保存的原始值为 PlanetType
+            self.unlockedPlanets = Set(savedUnlockedPlanets.compactMap { PlanetType(rawValue: $0) })
+            self.completedPlanets = Set(savedCompletedPlanets.compactMap { PlanetType(rawValue: $0) })
+            
+            // 确保 Venus 始终是解锁的
+            if !self.unlockedPlanets.contains(.venus) {
+                self.unlockedPlanets.insert(.venus)
+                self.saveUnlockedPlanets()
+            }
+        } else {
+            // 首次启动时只解锁 Venus
+            self.unlockedPlanets = [.venus]
+            self.completedPlanets = []
+            self.saveUnlockedPlanets()
+            self.saveCompletedPlanets()
+        }
     }
     
     // MARK: - Planet Type Definition
@@ -83,10 +101,28 @@ final class PlanetProgressViewModel: ObservableObject {
         saveUnlockedPlanets()
     }
     
+    /// 检查星球是否已完成
+    func isPlanetCompleted(_ planet: PlanetType) -> Bool {
+        completedPlanets.contains(planet)
+    }
+    
+    /// 标记星球为已完成
+    func markPlanetAsCompleted(_ planet: PlanetType) {
+        completedPlanets.insert(planet)
+        saveCompletedPlanets()
+        
+        // 完成后解锁下一个星球
+        if let next = planet.nextPlanet {
+            unlockPlanet(next)
+        }
+    }
+    
     /// 重置所有星球状态
     func resetAllPlanets() {
         unlockedPlanets = [.venus]
+        completedPlanets = []
         saveUnlockedPlanets()
+        saveCompletedPlanets()
     }
     
     /// 解锁指定星球之后的所有星球
@@ -119,6 +155,12 @@ final class PlanetProgressViewModel: ObservableObject {
     private func saveUnlockedPlanets() {
         let planetsArray = unlockedPlanets.map { $0.rawValue }
         UserDefaults.standard.set(planetsArray, forKey: userDefaultsKey)
+    }
+    
+    /// 保存已完成状态到 UserDefaults
+    private func saveCompletedPlanets() {
+        let planetsArray = completedPlanets.map { $0.rawValue }
+        UserDefaults.standard.set(planetsArray, forKey: completedPlanetsKey)
     }
     
     /// 重置所有解锁状态（仅用于测试）

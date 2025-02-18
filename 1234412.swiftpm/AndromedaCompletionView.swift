@@ -388,7 +388,11 @@ struct AndromedaCompletionView: View {
                                         }
                                         
                                         DispatchQueue.main.asyncAfter(deadline: .now() + 0.5) {
-                                            dismiss()
+                                            if let windowScene = UIApplication.shared.connectedScenes.first as? UIWindowScene,
+                                               let window = windowScene.windows.first,
+                                               let rootViewController = window.rootViewController {
+                                                rootViewController.dismiss(animated: true)
+                                            }
                                         }
                                     } else {
                                         withAnimation(.easeInOut(duration: 0.8)) {
@@ -446,7 +450,7 @@ struct AndromedaCompletionView: View {
                                 }
                                 .opacity(guideTextOpacity)
                                 .shadow(color: Color(red: 0.6, green: 0.4, blue: 0.9).opacity(0.5), radius: 10)
-                                .padding(.bottom, 40)
+                                .offset(y: -geometry.size.height * 0.4)  // 改为屏幕高度的 40%
                                 .transition(.opacity)
                             }
                         }
