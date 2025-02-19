@@ -8,13 +8,13 @@ import PackageDescription
 import AppleProductTypes
 
 let package = Package(
-    name: "SmileDetector",
+    name: "EmotionGalaxy",
     platforms: [
         .iOS("18.0")
     ],
     products: [
         .iOSApplication(
-            name: "SmileDetector",
+            name: "EmotionGalaxy",
             targets: ["AppModule"],
             bundleIdentifier: "com.randy.smiledetector",
             teamIdentifier: "8PHTJZGGL9",

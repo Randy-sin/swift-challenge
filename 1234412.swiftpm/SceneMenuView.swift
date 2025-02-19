@@ -16,6 +16,7 @@ struct SceneMenuView: View {
     @State private var showPsycheDialogue = false
     @State private var showAndromedaGuide = false
     @State private var showEndingCredits = false
+    @State private var showContent = false
     
     var body: some View {
         ZStack {
@@ -33,6 +34,7 @@ struct SceneMenuView: View {
             // 粒子背景
             EmotionParticleView()
                 .edgesIgnoringSafeArea(.all)
+                .opacity(showContent ? 1 : 0)
             
             // 主要内容
             VStack(spacing: 40) {
@@ -234,6 +236,14 @@ struct SceneMenuView: View {
                     .frame(height: 150)
                     .environmentObject(artisticViewModel)
                     .environmentObject(progressViewModel)
+            }
+            .opacity(showContent ? 1 : 0)
+            .blur(radius: showContent ? 0 : 10)
+        }
+        .onAppear {
+            // 添加淡入动画
+            withAnimation(.easeOut(duration: 1.2)) {
+                showContent = true
             }
         }
         .preferredColorScheme(.dark)

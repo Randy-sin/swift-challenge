@@ -53,32 +53,41 @@ struct JourneyEndingView: View {
                             .padding(.vertical, 32)
                         
                         // Venus 部分
-                        VStack(spacing: 32) {
-                            Text("~ Venus ~")
-                                .font(.custom("SF Pro Display", size: 48, relativeTo: .title))
-                                .fontWeight(.medium)
-                                .frame(maxWidth: .infinity, alignment: .center)
+                        HStack(spacing: 32) {
+                            // 左侧文字内容
+                            VStack(spacing: 32) {
+                                Text("~ Venus ~")
+                                    .font(.custom("SF Pro Display", size: 48, relativeTo: .title))
+                                    .fontWeight(.medium)
+                                    .frame(maxWidth: .infinity, alignment: .center)
+                                
+                                Text("The Golden Light of Joy")
+                                    .font(.custom("SF Pro Display", size: 36))
+                                    .fontWeight(.light)
+                                    .opacity(0.9)
+                                    .frame(maxWidth: .infinity, alignment: .center)
+                                
+                                Text("""
+                                In the warm radiance of Venus,
+                                we discovered that happiness
+                                is not just an emotion,
+                                but a beacon that guides others
+                                through their darkest moments.
+                                """)
+                                .font(.custom("SF Pro Display", size: 32))
+                                .fontWeight(.regular)
+                                .lineSpacing(20)
+                                .opacity(0.85)
+                                .multilineTextAlignment(.center)
+                                .frame(maxWidth: geometry.size.width * 0.8)
+                                .padding(.top, 16)
+                            }
                             
-                            Text("The Golden Light of Joy")
-                                .font(.custom("SF Pro Display", size: 36))
-                                .fontWeight(.light)
-                                .opacity(0.9)
-                                .frame(maxWidth: .infinity, alignment: .center)
-                            
-                            Text("""
-                            In the warm radiance of Venus,
-                            we discovered that happiness
-                            is not just an emotion,
-                            but a beacon that guides others
-                            through their darkest moments.
-                            """)
-                            .font(.custom("SF Pro Display", size: 32))
-                            .fontWeight(.regular)
-                            .lineSpacing(20)
-                            .opacity(0.85)
-                            .multilineTextAlignment(.center)
-                            .frame(maxWidth: geometry.size.width * 0.8)
-                            .padding(.top, 16)
+                            // 右侧图片
+                            Image("CompleteVenus")
+                                .resizable()
+                                .aspectRatio(contentMode: .fit)
+                                .frame(width: 200, height: 200)
                         }
                         .foregroundColor(venusColor)
                         .frame(maxWidth: .infinity)
@@ -90,28 +99,38 @@ struct JourneyEndingView: View {
                             .padding(.vertical, 40)
                         
                         // Artistic 部分
-                        VStack(spacing: 24) {
-                            Text("~ Artistic ~")
-                                .font(.custom("SF Pro Display", size: 40, relativeTo: .title))
-                                .fontWeight(.medium)
-                            Text("The Canvas of the Soul")
-                                .font(.custom("SF Pro Display", size: 32))
-                                .fontWeight(.light)
-                                .opacity(0.9)
-                            Text("""
-                            Within the azure expanse of creativity,
-                            we learned that every emotion
-                            deserves to be expressed,
-                            painted across the cosmic canvas
-                            of our inner universe.
-                            """)
-                            .font(.custom("SF Pro Display", size: 28))
-                            .fontWeight(.regular)
-                            .lineSpacing(16)
-                            .opacity(0.85)
-                            .padding(.top, 8)
+                        HStack(spacing: 32) {
+                            // 左侧图片
+                            Image("CompleteAristic")
+                                .resizable()
+                                .aspectRatio(contentMode: .fit)
+                                .frame(width: 200, height: 200)
+                            
+                            // 右侧文字内容
+                            VStack(spacing: 24) {
+                                Text("~ Artistic ~")
+                                    .font(.custom("SF Pro Display", size: 40, relativeTo: .title))
+                                    .fontWeight(.medium)
+                                Text("The Canvas of the Soul")
+                                    .font(.custom("SF Pro Display", size: 32))
+                                    .fontWeight(.light)
+                                    .opacity(0.9)
+                                Text("""
+                                Within the azure expanse of creativity,
+                                we learned that every emotion
+                                deserves to be expressed,
+                                painted across the cosmic canvas
+                                of our inner universe.
+                                """)
+                                .font(.custom("SF Pro Display", size: 28))
+                                .fontWeight(.regular)
+                                .lineSpacing(16)
+                                .opacity(0.85)
+                                .padding(.top, 8)
+                            }
                         }
                         .foregroundColor(artisticColor)
+                        .padding(.horizontal, 32)
                         
                         Text("•••")
                             .font(.custom("SF Pro Display", size: 32))
@@ -119,28 +138,39 @@ struct JourneyEndingView: View {
                             .padding(.vertical, 24)
                         
                         // Oceanus 部分
-                        VStack(spacing: 24) {
-                            Text("~ Oceanus ~")
-                                .font(.custom("SF Pro Display", size: 40, relativeTo: .title))
-                                .fontWeight(.medium)
-                            Text("The Deep Blue of Tranquility")
-                                .font(.custom("SF Pro Display", size: 32))
-                                .fontWeight(.light)
-                                .opacity(0.9)
-                            Text("""
-                            In the depths of Oceanus,
-                            we found that peace flows
-                            like celestial tides,
-                            teaching us to breathe
-                            in harmony with the cosmos.
-                            """)
-                            .font(.custom("SF Pro Display", size: 28))
-                            .fontWeight(.regular)
-                            .lineSpacing(16)
-                            .opacity(0.85)
-                            .padding(.top, 8)
+                        HStack(spacing: 32) {
+                            // 左侧图片
+                            Image("CompleteNeptune")
+                                .resizable()
+                                .aspectRatio(contentMode: .fit)
+                                .frame(width: 200, height: 200)
+                            
+                            // 右侧文字内容
+                            VStack(spacing: 24) {
+                                Text("~ Oceanus ~")
+                                    .font(.custom("SF Pro Display", size: 40, relativeTo: .title))
+                                    .fontWeight(.medium)
+                                Text("The Deep Blue of Tranquility")
+                                    .font(.custom("SF Pro Display", size: 32))
+                                    .fontWeight(.light)
+                                    .opacity(0.9)
+                                
+                                Text("""
+                                In the depths of Oceanus,
+                                we found that peace flows
+                                like celestial tides,
+                                teaching us to breathe
+                                in harmony with the cosmos.
+                                """)
+                                .font(.custom("SF Pro Display", size: 28))
+                                .fontWeight(.regular)
+                                .lineSpacing(16)
+                                .opacity(0.85)
+                                .padding(.top, 8)
+                            }
                         }
                         .foregroundColor(oceanusColor)
+                        .padding(.horizontal, 32)
                         
                         Text("•••")
                             .font(.custom("SF Pro Display", size: 32))
@@ -148,27 +178,37 @@ struct JourneyEndingView: View {
                             .padding(.vertical, 24)
                         
                         // Andromeda 部分
-                        VStack(spacing: 24) {
-                            Text("~ Andromeda ~")
-                                .font(.custom("SF Pro Display", size: 40, relativeTo: .title))
-                                .fontWeight(.medium)
-                            Text("The Purple Bridge of Connection")
-                                .font(.custom("SF Pro Display", size: 32))
-                                .fontWeight(.light)
-                                .opacity(0.9)
-                            Text("""
-                            Among the starlit paths of Andromeda,
-                            we realized that understanding
-                            flows between hearts like
-                            stardust between galaxies.
-                            """)
-                            .font(.custom("SF Pro Display", size: 28))
-                            .fontWeight(.regular)
-                            .lineSpacing(16)
-                            .opacity(0.85)
-                            .padding(.top, 8)
+                        HStack(spacing: 32) {
+                            // 左侧图片
+                            Image("CompleteAndromeda")
+                                .resizable()
+                                .aspectRatio(contentMode: .fit)
+                                .frame(width: 200, height: 200)
+                            
+                            // 右侧文字内容
+                            VStack(spacing: 24) {
+                                Text("~ Andromeda ~")
+                                    .font(.custom("SF Pro Display", size: 40, relativeTo: .title))
+                                    .fontWeight(.medium)
+                                Text("The Purple Bridge of Connection")
+                                    .font(.custom("SF Pro Display", size: 32))
+                                    .fontWeight(.light)
+                                    .opacity(0.9)
+                                Text("""
+                                Among the starlit paths of Andromeda,
+                                we realized that understanding
+                                flows between hearts like
+                                stardust between galaxies.
+                                """)
+                                .font(.custom("SF Pro Display", size: 28))
+                                .fontWeight(.regular)
+                                .lineSpacing(16)
+                                .opacity(0.85)
+                                .padding(.top, 8)
+                            }
                         }
                         .foregroundColor(andromedaColor)
+                        .padding(.horizontal, 32)
                         
                         Text("•••")
                             .font(.custom("SF Pro Display", size: 32))

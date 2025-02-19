@@ -2,11 +2,19 @@ import SwiftUI
 
 @main
 struct MyApp: App {
-    @UIApplicationDelegateAdaptor(AppDelegate.self) var appDelegate
+    @StateObject private var audioManager = AudioManager.shared
+    @State private var showLaunchScreen = true
     
     var body: some Scene {
         WindowGroup {
-            ContentView()
+            ZStack {
+                if showLaunchScreen {
+                    LaunchView(showLaunchScreen: $showLaunchScreen)
+                } else {
+                    SceneMenuView()
+                }
+            }
+            .preferredColorScheme(.dark)
         }
     }
 }

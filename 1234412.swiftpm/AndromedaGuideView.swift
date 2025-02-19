@@ -202,7 +202,7 @@ struct AndromedaGuideView: View {
          description: "Welcome to your celestial sanctuary,\nwhere stardust and emotions dance in cosmic harmony"),
         
         (title: "Celestial Companion",
-         description: "Like starlight through cosmic winds,\nour advanced CoreML technology understands the whispers of your heart"),
+         description: "Like starlight through cosmic winds,\nour advanced CoreML understands the whispers of your heart"),
         
         (title: "Your Constellation Story",
          description: "Three heartfelt conversations will illuminate your path,\nlike three bright stars forming your unique celestial signature")

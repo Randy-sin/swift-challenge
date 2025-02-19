@@ -7,6 +7,8 @@ struct LaunchView: View {
     @State private var buttonOpacity: Double = 0
     @State private var particleOpacity: Double = 0
     @State private var titleOffset: CGFloat = 50
+    @State private var showGuide = false
+    @StateObject private var audioManager = AudioManager.shared
     
     var body: some View {
         ZStack {
@@ -24,6 +26,25 @@ struct LaunchView: View {
             // 情绪粒子系统
             EmotionParticleView()
                 .opacity(particleOpacity)
+            
+            // 音频控制按钮
+            VStack {
+                HStack {
+                    Spacer()
+                    Button(action: {
+                        audioManager.toggleBackgroundMusic()
+                    }) {
+                        Image(systemName: audioManager.isPlaying ? "speaker.wave.2.fill" : "speaker.slash.fill")
+                            .font(.system(size: 24))
+                            .foregroundColor(.white)
+                            .padding(10)
+                            .background(Color(red: 0.2, green: 0.2, blue: 0.3).opacity(0.6))
+                            .clipShape(Circle())
+                    }
+                    .padding(24)
+                }
+                Spacer()
+            }
             
             VStack(spacing: 0) {
                 Spacer()
@@ -85,7 +106,7 @@ struct LaunchView: View {
                 // 按钮区域
                 Button(action: {
                     withAnimation(.easeInOut(duration: 0.8)) {
-                        showLaunchScreen = false
+                        showGuide = true
                     }
                 }) {
                     Text("Begin Healing Journey")
@@ -116,7 +137,13 @@ struct LaunchView: View {
             }
             .padding(.horizontal, 40)
         }
+        .fullScreenCover(isPresented: $showGuide) {
+            GuidePageView(showLaunchScreen: $showLaunchScreen)
+        }
         .onAppear {
+            // 开始播放音乐
+            audioManager.play()
+            
             // 动画序列
             withAnimation(.easeOut(duration: 2)) {
                 particleOpacity = 1
