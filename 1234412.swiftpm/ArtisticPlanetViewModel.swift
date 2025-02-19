@@ -263,7 +263,7 @@ final class ArtisticPlanetViewModel: ObservableObject {
                     let failureMessage: String
                     switch step {
                     case 1:
-                        failureMessage = "I see your creativity, but maybe we could add more elements that represent blooming hope. Try again!"
+                        failureMessage = "I see your creativity, but maybe we could add more elements that represent blooming hope.\nIf this is your first try, tap Validate again to attempt recognition."
                     case 2:
                         failureMessage = "I see your artistic spirit, but maybe we could make it look more tree-like with branches. Try again!"
                     case 3:

@@ -241,7 +241,7 @@ struct ArtisticGuideView: View {
         ),
         (
             title: "AI Recognition",
-            description: "This planet uses CoreML technology to recognize your drawings. For the best experience, please run on a real device as the simulator has limited AI capabilities.",
+            description: "This planet uses CoreML to recognize your drawings. For the best experience, please run on a real device as the simulator has limited AI capabilities.",
             prompt: "Follow the prompts and let AI guide your creative journey.",
             data: "CoreML requires a physical device for optimal performance"
         ),

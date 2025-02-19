@@ -46,20 +46,58 @@ struct PlanetPreviewContainer: View {
     var body: some View {
         // 外层装饰矩形
         ZStack {
-            // 外层矩形背景
+            // 背景和装饰
+            ZStack {
+                // 毛玻璃背景
+                Color.clear
+                    .background(.ultraThinMaterial.opacity(0.7))
+                
+                // 渐变装饰
+                LinearGradient(
+                    colors: [
+                        Color.white.opacity(0.1),
+                        Color.clear
+                    ],
+                    startPoint: .topLeading,
+                    endPoint: .bottomTrailing
+                )
+                
+                // 星星装饰
+                ForEach(0..<20) { _ in
+                    Circle()
+                        .fill(Color.white)
+                        .frame(width: 2, height: 2)
+                        .position(
+                            x: CGFloat.random(in: 0...600),
+                            y: CGFloat.random(in: 0...190)
+                        )
+                        .opacity(Double.random(in: 0.3...0.6))
+                }
+            }
+            .clipShape(RoundedRectangle(cornerRadius: 28))
+            
+            // 边框
             RoundedRectangle(cornerRadius: 28)
-                .fill(Color(red: 0.12, green: 0.12, blue: 0.14))  // 深灰色背景
-                .overlay(
-                    RoundedRectangle(cornerRadius: 28)
-                        .stroke(Color.white.opacity(0.15), lineWidth: 1)  // 调整边框透明度
+                .stroke(
+                    LinearGradient(
+                        colors: [
+                            Color.white.opacity(0.3),
+                            Color.white.opacity(0.1)
+                        ],
+                        startPoint: .topLeading,
+                        endPoint: .bottomTrailing
+                    ),
+                    lineWidth: 1
                 )
             
+            // 内容
             VStack(spacing: 0) {
                 // 标题
                 Text("Journey Logs")
                     .font(.system(size: 22, weight: .medium, design: .rounded))
                     .foregroundColor(.white.opacity(0.9))
                     .tracking(0.5)  // 字间距
+                    .shadow(color: .black.opacity(0.3), radius: 4, x: 0, y: 2)
                     .padding(.top, 22)
                     .padding(.bottom, 15)
                 
@@ -91,10 +129,20 @@ struct PlanetPreviewContainer: View {
                         // Venus Preview
                         ZStack {
                             RoundedRectangle(cornerRadius: 16)
-                                .fill(.ultraThinMaterial)
+                                .fill(.ultraThinMaterial.opacity(0.7))
                                 .overlay(
                                     RoundedRectangle(cornerRadius: 16)
-                                        .stroke(Color.white.opacity(0.2), lineWidth: 1)
+                                        .stroke(
+                                            LinearGradient(
+                                                colors: [
+                                                    Color.white.opacity(0.3),
+                                                    Color.white.opacity(0.1)
+                                                ],
+                                                startPoint: .topLeading,
+                                                endPoint: .bottomTrailing
+                                            ),
+                                            lineWidth: 1
+                                        )
                                 )
                             
                             if !progressViewModel.isPlanetCompleted(.venus) {
@@ -126,10 +174,20 @@ struct PlanetPreviewContainer: View {
                         // Artistic Preview
                         ZStack {
                             RoundedRectangle(cornerRadius: 16)
-                                .fill(.ultraThinMaterial)
+                                .fill(.ultraThinMaterial.opacity(0.7))
                                 .overlay(
                                     RoundedRectangle(cornerRadius: 16)
-                                        .stroke(Color.white.opacity(0.2), lineWidth: 1)
+                                        .stroke(
+                                            LinearGradient(
+                                                colors: [
+                                                    Color.white.opacity(0.3),
+                                                    Color.white.opacity(0.1)
+                                                ],
+                                                startPoint: .topLeading,
+                                                endPoint: .bottomTrailing
+                                            ),
+                                            lineWidth: 1
+                                        )
                                 )
                             
                             if !progressViewModel.isPlanetCompleted(.artistic) {
@@ -161,10 +219,20 @@ struct PlanetPreviewContainer: View {
                         // Oceanus Preview
                         ZStack {
                             RoundedRectangle(cornerRadius: 16)
-                                .fill(.ultraThinMaterial)
+                                .fill(.ultraThinMaterial.opacity(0.7))
                                 .overlay(
                                     RoundedRectangle(cornerRadius: 16)
-                                        .stroke(Color.white.opacity(0.2), lineWidth: 1)
+                                        .stroke(
+                                            LinearGradient(
+                                                colors: [
+                                                    Color.white.opacity(0.3),
+                                                    Color.white.opacity(0.1)
+                                                ],
+                                                startPoint: .topLeading,
+                                                endPoint: .bottomTrailing
+                                            ),
+                                            lineWidth: 1
+                                        )
                                 )
                             
                             if !progressViewModel.isPlanetCompleted(.oceanus) {
@@ -196,10 +264,20 @@ struct PlanetPreviewContainer: View {
                         // Andromeda Preview
                         ZStack {
                             RoundedRectangle(cornerRadius: 16)
-                                .fill(.ultraThinMaterial)
+                                .fill(.ultraThinMaterial.opacity(0.7))
                                 .overlay(
                                     RoundedRectangle(cornerRadius: 16)
-                                        .stroke(Color.white.opacity(0.2), lineWidth: 1)
+                                        .stroke(
+                                            LinearGradient(
+                                                colors: [
+                                                    Color.white.opacity(0.3),
+                                                    Color.white.opacity(0.1)
+                                                ],
+                                                startPoint: .topLeading,
+                                                endPoint: .bottomTrailing
+                                            ),
+                                            lineWidth: 1
+                                        )
                                 )
                             
                             if !progressViewModel.isPlanetCompleted(.andromeda) {
@@ -228,7 +306,7 @@ struct PlanetPreviewContainer: View {
                         }
                         .frame(width: 120, height: 120)
                     }
-                    .frame(maxWidth: .infinity, alignment: .center)  // 确保 HStack 居中
+                    .frame(maxWidth: .infinity, alignment: .center)
                     .padding(.horizontal, 25)
                     .padding(.vertical, 20)
                 }

@@ -15,6 +15,7 @@ struct SceneMenuView: View {
     @State private var showOceanusAR = false
     @State private var showPsycheDialogue = false
     @State private var showAndromedaGuide = false
+    @State private var showEndingCredits = false
     
     var body: some View {
         ZStack {
@@ -36,48 +37,99 @@ struct SceneMenuView: View {
             // 主要内容
             VStack(spacing: 40) {
                 ZStack {
-                    // 标题居中
-                    Text("Choose Your Journey")
-                        .font(.system(size: 38, weight: .bold, design: .rounded))
-                        .foregroundColor(.white)
+                    // 标题区域
+                    if progressViewModel.isPlanetCompleted(.andromeda) {
+                        HStack(spacing: 24) {
+                            // Finish 按钮
+                            Button(action: {
+                                showEndingCredits = true
+                            }) {
+                                Text("Journey's End")
+                                    .font(.system(size: 17, weight: .semibold, design: .rounded))
+                                    .foregroundColor(.black)
+                                    .padding(.horizontal, 24)
+                                    .padding(.vertical, 12)
+                                    .background(
+                                        LinearGradient(
+                                            colors: [
+                                                Color(red: 1.0, green: 0.85, blue: 0.4),
+                                                Color(red: 1.0, green: 0.7, blue: 0.3)
+                                            ],
+                                            startPoint: .topLeading,
+                                            endPoint: .bottomTrailing
+                                        )
+                                    )
+                                    .clipShape(RoundedRectangle(cornerRadius: 20))
+                                    .shadow(color: Color(red: 1.0, green: 0.7, blue: 0.3).opacity(0.5), radius: 10, x: 0, y: 5)
+                            }
+                            .fullScreenCover(isPresented: $showEndingCredits) {
+                                JourneyEndingView()
+                            }
+
+                            // 标题和副标题
+                            VStack(spacing: 8) {
+                                Text("EmotionGalaxy Journey Complete")
+                                    .font(.system(size: 32, weight: .bold, design: .rounded))
+                                    .foregroundColor(.white)
+                                    .tracking(0.5)
+                                    .multilineTextAlignment(.center)
+                                
+                                Text("Your emotional odyssey through the cosmos has reached its zenith")
+                                    .font(.system(size: 16, weight: .regular, design: .rounded))
+                                    .foregroundColor(.white.opacity(0.7))
+                                    .multilineTextAlignment(.center)
+                            }
+                            .frame(maxWidth: .infinity)
+                            
+                            // 占位视图，保持布局平衡
+                            Color.clear
+                                .frame(width: 140)
+                        }
+                    } else {
+                        Text("Choose Your Journey")
+                            .font(.system(size: 38, weight: .bold, design: .rounded))
+                            .foregroundColor(.white)
+                    }
                     
                     // 右侧按钮组
-                    HStack(spacing: 15) {
-                        // 音乐控制按钮
-                        AudioPlayerView()
-                        
-                        // 设置按钮
-                        Menu {
-                            Button(action: {
-                                progressViewModel.resetAllPlanets()
-                            }) {
-                                Label("Reset Journey", systemImage: "arrow.counterclockwise")
-                                    .foregroundColor(.white)
-                            }
+                    HStack {
+                        Spacer()
+                        HStack(spacing: 15) {
+                            // 音乐控制按钮
+                            AudioPlayerView()
                             
-                            Menu("Unlock Celestial Paths") {
-                                ForEach(PlanetProgressViewModel.PlanetType.allCases, id: \.self) { planet in
-                                    if !progressViewModel.isPlanetLocked(planet) {
-                                        Button(action: {
-                                            progressViewModel.unlockPlanetsAfter(planet)
-                                        }) {
-                                            Label("Beyond \(planet.name)", systemImage: "sparkles")
+                            // 设置按钮
+                            Menu {
+                                Button(action: {
+                                    progressViewModel.resetAllPlanets()
+                                }) {
+                                    Label("Reset Journey", systemImage: "arrow.counterclockwise")
+                                        .foregroundColor(.white)
+                                }
+                                
+                                Menu("Unlock Celestial Paths") {
+                                    ForEach(PlanetProgressViewModel.PlanetType.allCases, id: \.self) { planet in
+                                        if !progressViewModel.isPlanetLocked(planet) {
+                                            Button(action: {
+                                                progressViewModel.unlockPlanetsAfter(planet)
+                                            }) {
+                                                Label("Beyond \(planet.name)", systemImage: "sparkles")
+                                            }
                                         }
                                     }
                                 }
+                            } label: {
+                                Image(systemName: "gearshape.fill")
+                                    .font(.system(size: 24))
+                                    .foregroundColor(.white)
+                                    .padding(10)
+                                    .background(Color(red: 0.2, green: 0.2, blue: 0.3).opacity(0.6))
+                                    .clipShape(Circle())
                             }
-                        } label: {
-                            Image(systemName: "gearshape.fill")
-                                .font(.system(size: 24))
-                                .foregroundColor(.white)
-                                .padding(10)
-                                .background(Color(red: 0.2, green: 0.2, blue: 0.3).opacity(0.6))
-                                .clipShape(Circle())
                         }
                     }
-                    .frame(maxWidth: .infinity, alignment: .trailing)
-                    .padding(.horizontal, 30)
                 }
+                .padding(.horizontal, 30)
                 .padding(.top, 40)
                 
                 // 场景网格
@@ -234,6 +286,10 @@ struct SceneMenuView: View {
         }
         .fullScreenCover(isPresented: $showPsycheDialogue) {
             PsycheDialogueView()
+                .onDisappear {
+                    // Andromeda 完成后标记为已完成
+                    progressViewModel.markPlanetAsCompleted(.andromeda)
+                }
         }
     }
 }

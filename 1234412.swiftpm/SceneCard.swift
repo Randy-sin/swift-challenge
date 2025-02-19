@@ -124,43 +124,56 @@ struct SceneCard: View {
 struct UnlockHintView: View {
     let message: String
     let onDismiss: () -> Void
+    @State private var isAppearing = false
     
     var body: some View {
         VStack(spacing: 16) {
-            Image(systemName: "lock.fill")
-                .font(.system(size: 30))
-                .foregroundColor(.white)
-            
-            Text("Locked")
-                .font(.system(size: 20, weight: .bold, design: .rounded))
-                .foregroundColor(.white)
-            
-            Text(message)
-                .font(.system(size: 16, weight: .regular, design: .rounded))
-                .foregroundColor(.white.opacity(0.8))
-                .multilineTextAlignment(.center)
-                .padding(.horizontal, 20)
-            
-            Button(action: onDismiss) {
-                Text("Got it")
-                    .font(.system(size: 16, weight: .medium))
-                    .foregroundColor(.black)
-                    .padding(.horizontal, 24)
-                    .padding(.vertical, 8)
-                    .background(Color.white)
-                    .clipShape(Capsule())
+            // 图标和文字组合
+            VStack(spacing: 12) {
+                Image(systemName: "lock.fill")
+                    .font(.system(size: 28))
+                    .foregroundColor(.white.opacity(0.9))
+                    .frame(width: 40, height: 40)
+                    .background(
+                        Circle()
+                            .fill(.ultraThinMaterial)
+                            .overlay(
+                                Circle()
+                                    .stroke(Color.white.opacity(0.3), lineWidth: 1)
+                            )
+                    )
+                    .scaleEffect(isAppearing ? 1 : 0.8)
+                
+                VStack(spacing: 4) {
+                    Text("Locked")
+                        .font(.system(size: 20, weight: .semibold, design: .rounded))
+                        .foregroundColor(.white)
+                    
+                    Text(message)
+                        .font(.system(size: 15, weight: .regular, design: .rounded))
+                        .foregroundColor(.white.opacity(0.7))
+                        .multilineTextAlignment(.center)
+                        .padding(.horizontal, 20)
+                }
+            }
+            .offset(y: isAppearing ? 0 : 10)
+        }
+        .frame(maxWidth: .infinity, maxHeight: .infinity)
+        .background(Color.black.opacity(0.4))
+        .opacity(isAppearing ? 1 : 0)
+        .onTapGesture {
+            withAnimation(.easeOut(duration: 0.2)) {
+                isAppearing = false
+            }
+            DispatchQueue.main.asyncAfter(deadline: .now() + 0.2) {
+                onDismiss()
             }
         }
-        .padding(24)
-        .background(
-            RoundedRectangle(cornerRadius: 20)
-                .fill(Color.black.opacity(0.8))
-                .background(.ultraThinMaterial)
-        )
-        .overlay(
-            RoundedRectangle(cornerRadius: 20)
-                .stroke(Color.white.opacity(0.2), lineWidth: 1)
-        )
+        .onAppear {
+            withAnimation(.spring(response: 0.4, dampingFraction: 0.8)) {
+                isAppearing = true
+            }
+        }
     }
 }
 
